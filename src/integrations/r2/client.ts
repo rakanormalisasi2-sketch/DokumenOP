@@ -1,29 +1,30 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const R2_ACCOUNT_ID = import.meta.env.VITE_R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = import.meta.env.VITE_R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = import.meta.env.VITE_R2_SECRET_ACCESS_KEY;
-const R2_BUCKET = import.meta.env.VITE_R2_BUCKET;
-const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL;
+const R2_ACCOUNT_ID = import.meta.env.VITE_R2_ACCOUNT_ID || '';
+const R2_ACCESS_KEY_ID = import.meta.env.VITE_R2_ACCESS_KEY_ID || '';
+const R2_SECRET_ACCESS_KEY = import.meta.env.VITE_R2_SECRET_ACCESS_KEY || '';
+const R2_BUCKET = import.meta.env.VITE_R2_BUCKET || '';
+const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL || '';
 
 function isR2Configured() {
   return !!(R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET);
 }
 
-function createR2Client(): S3Client {
-  return new S3Client({
-    region: 'auto',
-    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: R2_ACCESS_KEY_ID,
-      secretAccessKey: R2_SECRET_ACCESS_KEY,
-    },
-  });
+// Store client instance to avoid re-creation and potential initialization order issues
+let r2Client: S3Client | null = null;
+
+function getR2Client(): S3Client {
+  if (!r2Client) {
+    r2Client = new S3Client({
+      region: 'auto',
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return r2Client;
 }
 
 export function getR2PublicUrl(key: string): string {
@@ -41,7 +42,7 @@ export const r2Storage = {
       throw new Error('R2 is not configured. Set VITE_R2_* environment variables.');
     }
 
-    const client = createR2Client();
+    const client = getR2Client();
     const arrayBuffer = body instanceof Blob ? await body.arrayBuffer() : new TextEncoder().encode(body).buffer;
 
     await client.send(
@@ -59,7 +60,7 @@ export const r2Storage = {
       throw new Error('R2 is not configured. Set VITE_R2_* environment variables.');
     }
 
-    const client = createR2Client();
+    const client = getR2Client();
 
     try {
       const response = await client.send(
@@ -91,7 +92,7 @@ export const r2Storage = {
       throw new Error('R2 is not configured. Set VITE_R2_* environment variables.');
     }
 
-    const client = createR2Client();
+    const client = getR2Client();
     await client.send(
       new DeleteObjectCommand({
         Bucket: R2_BUCKET,

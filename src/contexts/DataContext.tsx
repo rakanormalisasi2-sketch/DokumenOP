@@ -183,14 +183,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const loaded = await templateStorage.loadAllTemplateContents(defaultTemplates);
-        if (cancelled) return;
-        setTemplates((prev) =>
-          prev.map((t) => {
-            const content = loaded[t.id];
-            return content ? { ...t, content } : t;
-          })
-        );
+        // Skip R2 loading if not configured (graceful fallback for fresh deployment)
+        if (r2Storage.isConfigured()) {
+          const loaded = await templateStorage.loadAllTemplateContents(defaultTemplates);
+          if (cancelled) return;
+          setTemplates((prev) =>
+            prev.map((t) => {
+              const content = loaded[t.id];
+              return content ? { ...t, content } : t;
+            })
+          );
+        } else {
+          console.info('[DataContext] R2 not configured, skipping template hydration');
+        }
       } catch (e) {
         console.error('Failed to load templates from storage:', e);
       }
