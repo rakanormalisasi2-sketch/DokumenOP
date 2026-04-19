@@ -1,0 +1,51 @@
+.native-editor-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.editor-btn {
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #333;
+  background: white;
+  border: 1px solid transparent;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.editor-btn:hover {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+
+.editor-btn:active {
+  background: #e1e1e1;
+}
+
+/* Canvas cursor */
+.paper-sheet canvas {
+  cursor: text;
+}
+
+/* Hidden input must be invisible but focusable */
+.native-hidden-input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  outline: none !important;
+  resize: none !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  color: transparent !important;
+  caret-color: transparent !important;
+}
+
+/* Selection color override */
+.native-canvas-viewport ::selection {
+  background: rgba(0, 120, 215, 0.3);
+}

@@ -1,0 +1,1233 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
+
+    --primary: 217 91% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 25% 25%;
+
+    --muted: 210 30% 95%;
+    --muted-foreground: 215 20% 45%;
+
+    --accent: 210 40% 92%;
+    --accent-foreground: 220 25% 15%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 50%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 220 25% 12%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 20% 20%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 50%) 0%, hsl(230 80% 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 25% 12%) 0%, hsl(217 50% 25%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 25% 10% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 25% 10% / 0.1), 0 2px 4px -2px hsl(220 25% 10% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 25% 10% / 0.1), 0 4px 6px -4px hsl(220 25% 10% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(220 25% 10% / 0.1), 0 8px 10px -6px hsl(220 25% 10% / 0.1);
+    --shadow-card: 0 1px 3px hsl(220 25% 10% / 0.08), 0 4px 12px hsl(220 25% 10% / 0.05);
+    --shadow-elevated: 0 8px 30px hsl(220 25% 10% / 0.12);
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 20% 98%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 220 20% 22%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+    box-shadow: var(--shadow-card);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* TipTap Editor Styles */
+.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.tiptap-table td,
+.tiptap-table th {
+  border: 1px solid hsl(var(--border));
+  padding: 8px;
+  min-width: 60px;
+}
+
+.tiptap-table th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.tiptap-link {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+/* TipTap placeholders (used for table cells & text boxes) */
+.ProseMirror .is-empty::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Image Styles */
+.tiptap-image-wrapper {
+  display: inline-block;
+  position: relative;
+  line-height: 0;
+  isolation: isolate;
+  /* Create new stacking context */
+}
+
+.tiptap-image-wrapper.tiptap-image-selected {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  z-index: 50;
+  /* Ensure selected image is always on top for editing */
+}
+
+/* Floating images need to handle their own z-index relative to this wrapper */
+.tiptap-image-wrapper.tiptap-image-floating {
+  position: absolute !important;
+}
+
+.tiptap-image-toolbar {
+  position: absolute;
+  top: -42px;
+  /* Increased spacing */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  /* More rounded */
+  padding: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* Softer shadow */
+  z-index: 1000;
+  /* High z-index for toolbar */
+  white-space: nowrap;
+}
+
+.tiptap-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: hsl(var(--border));
+  margin: 0 4px;
+}
+
+.tiptap-image-resize-handle {
+  position: absolute;
+  width: 12px;
+  /* Larger hit area */
+  height: 12px;
+  background: white;
+  border: 2px solid hsl(var(--primary));
+  border-radius: 50%;
+  /* Circle handles like Google Docs */
+  z-index: 60;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s;
+}
+
+.tiptap-image-resize-handle:hover {
+  transform: scale(1.2);
+  background: hsl(var(--primary));
+}
+
+.tiptap-image-resize-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+.tiptap-image-resize-ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.tiptap-image-resize-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.tiptap-image-resize-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+
+.tiptap-image-resize-n {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.tiptap-image-resize-s {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.tiptap-image-resize-e {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.tiptap-image-resize-w {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.tiptap-image-rotate-handle {
+  position: absolute;
+  top: -25px;
+  /* Stick closer to image */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 1px solid hsl(var(--primary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 60;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: hsl(var(--primary));
+}
+
+.tiptap-image-rotate-handle:active {
+  cursor: grabbing;
+}
+
+.tiptap-image-size-indicator {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--background));
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  white-space: nowrap;
+}
+
+/* Text Box Styles - Word 2016 Like */
+.tiptap-textbox-wrapper {
+  display: block;
+  position: relative;
+  margin: 8px 0;
+  box-sizing: border-box;
+}
+
+/* Selected state - base */
+.tiptap-textbox-wrapper.tiptap-textbox-selected {
+  outline: none;
+}
+
+/* OBJECT MODE - solid blue border, can drag/resize */
+.tiptap-textbox-wrapper.tiptap-textbox-object-mode.tiptap-textbox-selected {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 0;
+}
+
+/* TEXT MODE - dashed border, can edit text */
+.tiptap-textbox-wrapper.tiptap-textbox-text-mode.tiptap-textbox-selected {
+  outline: 2px dashed hsl(217 91% 60% / 0.6);
+  outline-offset: 0;
+}
+
+/* Toolbar - appears above text box in object mode */
+.tiptap-textbox-toolbar {
+  position: absolute;
+  top: -38px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  padding: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.tiptap-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: hsl(var(--border));
+  margin: 0 2px;
+}
+
+/* Mode indicator - shows current mode */
+.tiptap-textbox-mode-indicator {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  font-size: 10px;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Content area */
+.tiptap-textbox-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+/* Object mode - show move cursor on border, text cursor in center */
+.tiptap-textbox-wrapper.tiptap-textbox-object-mode .tiptap-textbox-content {
+  cursor: text;
+}
+
+/* Text mode - text cursor everywhere */
+.tiptap-textbox-wrapper.tiptap-textbox-text-mode .tiptap-textbox-content {
+  cursor: text;
+}
+
+/* Inner content */
+.tiptap-textbox-inner {
+  outline: none;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.tiptap-textbox-inner>* {
+  margin: 0;
+}
+
+.tiptap-textbox-inner p {
+  margin: 0 0 0.5em 0;
+}
+
+.tiptap-textbox-inner p:last-child {
+  margin-bottom: 0;
+}
+
+/* Resize handles */
+.tiptap-textbox-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: hsl(var(--primary));
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 50;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tiptap-textbox-resize-handle:hover {
+  background: hsl(217 91% 40%);
+  transform: scale(1.1);
+}
+
+.tiptap-textbox-resize-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.tiptap-textbox-resize-ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.tiptap-textbox-resize-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.tiptap-textbox-resize-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
+
+.tiptap-textbox-resize-n {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.tiptap-textbox-resize-s {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.tiptap-textbox-resize-e {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.tiptap-textbox-resize-w {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+/* Rotation handle */
+.tiptap-textbox-rotate-handle {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: hsl(var(--muted-foreground));
+}
+
+.tiptap-textbox-rotate-handle:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+
+.tiptap-textbox-rotate-handle:active {
+  cursor: grabbing;
+}
+
+/* Size indicator */
+.tiptap-textbox-size-indicator {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--background));
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Resizable Table Styles */
+.tiptap-table {
+  position: relative;
+}
+
+/* Table selection wrapper */
+.ProseMirror table {
+  position: relative;
+}
+
+.ProseMirror table::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  pointer-events: none;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: border-color 0.15s;
+}
+
+.ProseMirror table:hover::before {
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.ProseMirror table.ProseMirror-selectednode::before {
+  border-color: hsl(var(--primary));
+}
+
+/* Table move handle */
+.ProseMirror table.ProseMirror-selectednode::after {
+  content: '⋮⋮';
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 20px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
+  cursor: move;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 2px;
+}
+
+/* Column/row resize hint pseudo-elements
+   NOTE: actual resizing is handled by WordTableExtension DOM plugin.
+   These pseudo-elements previously intercepted clicks/selection (especially tr::after),
+   making table cells hard to edit. Keep them non-interactive. */
+.tiptap-table td,
+.tiptap-table th {
+  position: relative;
+}
+
+.tiptap-table td::after,
+.tiptap-table th::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  pointer-events: none;
+  /* critical: don't block text editing / selection */
+}
+
+.tiptap-table tr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 4px;
+  background: transparent;
+  pointer-events: none;
+  /* critical */
+}
+
+/* Table Properties Panel */
+.table-properties-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: hsl(var(--muted) / 0.5);
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.table-properties-panel label {
+  font-size: 11px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+.table-properties-panel input[type="number"] {
+  width: 60px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  font-size: 11px;
+  background: hsl(var(--background));
+}
+
+.table-properties-panel input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.table-properties-panel select {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  font-size: 11px;
+  background: hsl(var(--background));
+}
+
+/* Grip handle for table move */
+.table-grip-handle {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 16px;
+  height: 16px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--primary));
+  border-radius: 3px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--primary));
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+}
+
+.table-grip-handle:hover {
+  background: hsl(var(--primary));
+  color: white;
+}
+
+/* ========================================
+   WORD 2016 TABLE STYLES - CLEAN
+   ======================================== */
+
+/* Table Wrapper - Base */
+.tableWrapper {
+  position: relative;
+  margin: 0 0 1em 0;
+  min-width: 100px;
+  background: white;
+  border-radius: 0;
+  transition: box-shadow 0.2s, outline 0.2s;
+}
+
+/* INLINE MODE - Normal document flow */
+.tableWrapper.table-inline {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: auto;
+  display: block;
+  margin: 1em 0;
+}
+
+/* FLOATING MODE - Absolute positioning */
+.tableWrapper.table-floating {
+  position: absolute !important;
+  z-index: 10;
+  margin: 0 !important;
+}
+
+/* ===== NORMAL STATE - CLEAN/POLOS ===== */
+.tableWrapper:not(.word-table-edit-mode):not(.word-table-select-mode):not(.word-table-object-mode) {
+  outline: none;
+}
+
+/* Subtle dashed outline on hover only (not active) */
+.tableWrapper:not(.word-table-edit-mode):not(.word-table-select-mode):not(.word-table-object-mode):hover {
+  outline: 1px dashed #cbd5e1;
+}
+
+/* Mode-specific wrapper styling */
+.tableWrapper.word-table-edit-mode {
+  outline: 2px solid #22c55e !important;
+  box-shadow: 0 0 0 1px #22c55e, 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.tableWrapper.word-table-select-mode {
+  outline: 2px solid #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.tableWrapper.word-table-object-mode {
+  outline: 2px solid #8b5cf6 !important;
+  box-shadow: 0 0 0 1px #8b5cf6, 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.tableWrapper.word-table-dragging {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  z-index: 1000 !important;
+  opacity: 0.95;
+  outline: 3px solid #8b5cf6 !important;
+}
+
+.tableWrapper.word-table-resizing {
+  outline: 2px solid #8b5cf6 !important;
+}
+
+/* ========== MOVE HANDLE ========== */
+.word-table-move-handle {
+  position: absolute;
+  top: -32px;
+  left: -32px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border: 2px solid white;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: move;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+/* Show on hover or any active mode */
+.tableWrapper:hover .word-table-move-handle,
+.tableWrapper:focus-within .word-table-move-handle,
+.tableWrapper.word-table-edit-mode .word-table-move-handle,
+.tableWrapper.word-table-select-mode .word-table-move-handle,
+.tableWrapper.word-table-object-mode .word-table-move-handle {
+  opacity: 1;
+}
+
+.word-table-move-handle:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.word-table-move-handle:active {
+  transform: scale(1.0);
+}
+
+.word-table-move-handle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ========== RESIZE HANDLES (8-point) ========== */
+.word-table-resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border: 2px solid hsl(var(--primary));
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.1s;
+  z-index: 40;
+}
+
+.tableWrapper:hover .word-table-resize-handle,
+.tableWrapper.word-table-object-mode .word-table-resize-handle {
+  opacity: 1;
+}
+
+.word-table-resize-handle:hover {
+  background: hsl(var(--primary));
+  transform: scale(1.3);
+}
+
+/* Handle positions */
+.word-table-resize-nw {
+  top: -4px;
+  left: -4px;
+  cursor: nwse-resize;
+}
+
+.word-table-resize-n {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.word-table-resize-ne {
+  top: -4px;
+  right: -4px;
+  cursor: nesw-resize;
+}
+
+.word-table-resize-e {
+  top: 50%;
+  right: -4px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.word-table-resize-se {
+  bottom: -4px;
+  right: -4px;
+  cursor: nwse-resize;
+}
+
+.word-table-resize-s {
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.word-table-resize-sw {
+  bottom: -4px;
+  left: -4px;
+  cursor: nesw-resize;
+}
+
+.word-table-resize-w {
+  top: 50%;
+  left: -4px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.word-table-resize-n:hover,
+.word-table-resize-s:hover {
+  transform: translateX(-50%) scale(1.3);
+}
+
+.word-table-resize-e:hover,
+.word-table-resize-w:hover {
+  transform: translateY(-50%) scale(1.3);
+}
+
+/* ========== INDICATORS ========== */
+.word-table-position-indicator,
+.word-table-size-indicator {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: hsl(220 25% 10%);
+  color: white;
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, monospace;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.word-table-col-indicator {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  background: hsl(var(--primary));
+  color: white;
+  font-size: 10px;
+  font-family: monospace;
+  border-radius: 3px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.word-table-row-indicator {
+  position: absolute;
+  right: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 8px;
+  background: hsl(var(--primary));
+  color: white;
+  font-size: 10px;
+  font-family: monospace;
+  border-radius: 3px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* ========== MODE INDICATOR ========== */
+.word-table-mode-indicator {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  padding: 3px 10px;
+  background: hsl(var(--primary) / 0.9);
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 3px;
+  white-space: nowrap;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.word-table-mode-indicator[data-mode="edit"] {
+  background: #22c55e;
+}
+
+.word-table-mode-indicator[data-mode="cell-select"] {
+  background: #f59e0b;
+}
+
+.word-table-mode-indicator[data-mode="table-select"] {
+  background: #8b5cf6;
+}
+
+/* ========== TABLE ELEMENT ========== */
+.tiptap-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  background: white;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+/* ===== CELL STYLES - RESPECT INLINE STYLES FOR BORDERS ===== */
+/* Do NOT set border here - let inline styles from editor control borders for print */
+.tiptap-table td,
+.tiptap-table th {
+  padding: 5px 7px;
+  min-width: 40px;
+  min-height: 24px;
+  vertical-align: top;
+  position: relative;
+  transition: border-color 0.1s, background-color 0.1s;
+  cursor: text;
+  box-sizing: border-box;
+  /* Default transparent border for editing visual, but inline styles override */
+  border: 1px solid transparent;
+}
+
+/* Header row default */
+.tiptap-table th {
+  background-color: #4472c4;
+  color: white;
+  font-weight: 600;
+}
+
+/* ===== HOVER STATE - show faint grid ===== */
+.tableWrapper:hover .tiptap-table td,
+.tableWrapper:hover .tiptap-table th {
+  border-color: #e2e8f0;
+}
+
+/* ===== ACTIVE MODES - show solid grid ===== */
+.tableWrapper.word-table-edit-mode .tiptap-table td,
+.tableWrapper.word-table-edit-mode .tiptap-table th,
+.tableWrapper.word-table-select-mode .tiptap-table td,
+.tableWrapper.word-table-select-mode .tiptap-table th,
+.tableWrapper.word-table-object-mode .tiptap-table td,
+.tableWrapper.word-table-object-mode .tiptap-table th {
+  border: 1px solid #94a3b8 !important;
+}
+
+/* Alternating rows when active */
+.tableWrapper.word-table-edit-mode .tiptap-table tbody tr:nth-child(odd) td,
+.tableWrapper.word-table-select-mode .tiptap-table tbody tr:nth-child(odd) td {
+  background-color: #ffffff;
+}
+
+.tableWrapper.word-table-edit-mode .tiptap-table tbody tr:nth-child(even) td,
+.tableWrapper.word-table-select-mode .tiptap-table tbody tr:nth-child(even) td {
+  background-color: #f8fafc;
+}
+
+/* Header row in active mode */
+.tableWrapper.word-table-edit-mode .tiptap-table th,
+.tableWrapper.word-table-select-mode .tiptap-table th,
+.tableWrapper.word-table-object-mode .tiptap-table th {
+  background-color: #4472c4 !important;
+  border-color: #3460b0 !important;
+}
+
+/* Cell hover in active mode */
+.tableWrapper.word-table-edit-mode .tiptap-table td:hover {
+  background-color: #e0f2fe !important;
+}
+
+/* ===== CELL SELECTION STATES ===== */
+/* Selected cells from ProseMirror CellSelection - blue highlight */
+.tiptap-table td.selectedCell,
+.tiptap-table th.selectedCell {
+  background-color: #bfdbfe !important;
+  border-color: #3b82f6 !important;
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+/* Cell being edited - green subtle highlight */
+.tiptap-table td.word-cell-editing,
+.tiptap-table th.word-cell-editing {
+  background-color: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  box-shadow: inset 0 0 0 2px #22c55e;
+}
+
+/* Focus within cell */
+.tiptap-table td:focus-within,
+.tiptap-table th:focus-within {
+  background-color: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  box-shadow: inset 0 0 0 2px #22c55e;
+}
+
+/* ========== COLUMN/ROW RESIZE HANDLES ========== */
+/* Column resize - right edge of cell - pointer-events: none to not block text editing */
+.tiptap-table td::after,
+.tiptap-table th::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 20;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Row resize - bottom edge of cell - pointer-events: none to not block text editing */
+.tiptap-table td::before,
+.tiptap-table th::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 20;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Show resize handles on hover in active modes - keep pointer-events: none */
+.tableWrapper.word-table-edit-mode .tiptap-table td:hover::after,
+.tableWrapper.word-table-edit-mode .tiptap-table th:hover::after {
+  background: linear-gradient(90deg, transparent, #3b82f6 50%, transparent);
+}
+
+.tableWrapper.word-table-edit-mode .tiptap-table td:hover::before,
+.tableWrapper.word-table-edit-mode .tiptap-table th:hover::before {
+  background: linear-gradient(180deg, transparent, #3b82f6 50%, transparent);
+}
+
+/* Row positioning for proper resize */
+.tiptap-table tr {
+  position: relative;
+}
+
+/* TipTap native column resize handle */
+.tiptap-table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #3b82f6;
+  cursor: col-resize;
+  z-index: 30;
+}
+
+/* Hide old drag handle styles */
+.table-drag-handle,
+.table-resize-handle {
+  display: none !important;
+}
+
+/* Cell selection mode */
+.word-cell-selection-active .tiptap-table td,
+.word-cell-selection-active .tiptap-table th {
+  user-select: none;
+}
+
+/* Selection range overlay */
+.word-cell-selection-range {
+  position: absolute;
+  background: hsl(217 91% 50% / 0.15);
+  border: 2px solid hsl(217 91% 50%);
+  pointer-events: none;
+  z-index: 25;
+}

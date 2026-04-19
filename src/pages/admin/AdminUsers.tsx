@@ -1,0 +1,505 @@
+import { useState } from 'react';
+import AdminLayout from '@/components/layout/AdminLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Search,
+  Copy,
+  Check,
+  UserPlus,
+  KeyRound,
+  Clock,
+  Mail,
+  Send,
+  Building2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AccessRequest {
+  id: string;
+  name: string;
+  email: string;
+  requestDate: Date;
+  status: 'pending' | 'approved' | 'rejected';
+  code?: string;
+}
+
+const sampleRequests: AccessRequest[] = [
+  {
+    id: '1',
+    name: 'PT Maju Bersama',
+    email: 'info@majubersama.co.id',
+    requestDate: new Date('2024-01-20'),
+    status: 'pending',
+  },
+  {
+    id: '2',
+    name: 'CV Karya Mandiri',
+    email: 'admin@karyamandiri.com',
+    requestDate: new Date('2024-01-18'),
+    status: 'approved',
+    code: 'KM2024A',
+  },
+  {
+    id: '3',
+    name: 'PT Teknologi Nusantara',
+    email: 'contact@teknusa.id',
+    requestDate: new Date('2024-01-15'),
+    status: 'approved',
+    code: 'TN2024B',
+  },
+];
+
+export default function AdminUsers() {
+  const [requests, setRequests] = useState<AccessRequest[]>(sampleRequests);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<AccessRequest | null>(null);
+  const [generatedCode, setGeneratedCode] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  // Manual code generation state
+  const [manualName, setManualName] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+
+  const filteredRequests = requests.filter(
+    (r) =>
+      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const generateCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  };
+
+  const handleApprove = (request: AccessRequest) => {
+    setSelectedRequest(request);
+    setGeneratedCode(generateCode());
+    setShowGenerateDialog(true);
+  };
+
+  const handleManualCreate = () => {
+    setManualName('');
+    setManualEmail('');
+    setGeneratedCode(generateCode());
+    setShowManualDialog(true);
+  };
+
+  const sendAccessCodeEmail = async (email: string, name: string, code: string) => {
+    setIsSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-access-code', {
+        body: { to: email, name, code },
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Kode akses berhasil dikirim ke ${email}`);
+      return true;
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast.error(`Gagal mengirim email: ${error.message}`);
+      return false;
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleConfirmCode = async (sendEmail: boolean = false) => {
+    if (selectedRequest) {
+      if (sendEmail) {
+        const success = await sendAccessCodeEmail(
+          selectedRequest.email, 
+          selectedRequest.name, 
+          generatedCode
+        );
+        if (!success) return;
+      }
+
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === selectedRequest.id
+            ? { ...r, status: 'approved' as const, code: generatedCode }
+            : r
+        )
+      );
+      
+      toast.success('Kode akses berhasil dibuat');
+      setShowGenerateDialog(false);
+      setSelectedRequest(null);
+    }
+  };
+
+  const handleConfirmManualCode = async (sendEmail: boolean = false) => {
+    if (!manualName) {
+      toast.error('Mohon masukkan nama perusahaan/instansi');
+      return;
+    }
+
+    if (sendEmail && !manualEmail) {
+      toast.error('Mohon masukkan email untuk mengirim kode');
+      return;
+    }
+
+    if (sendEmail && manualEmail) {
+      const success = await sendAccessCodeEmail(manualEmail, manualName, generatedCode);
+      if (!success) return;
+    }
+
+    const newRequest: AccessRequest = {
+      id: crypto.randomUUID(),
+      name: manualName,
+      email: manualEmail || '-',
+      requestDate: new Date(),
+      status: 'approved',
+      code: generatedCode,
+    };
+
+    setRequests((prev) => [...prev, newRequest]);
+    toast.success('Kode akses berhasil dibuat');
+    setShowManualDialog(false);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success('Kode berhasil disalin');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-heading font-bold text-foreground">Kelola Akses</h1>
+            <p className="text-muted-foreground mt-1">
+              Kelola permintaan akses dan kode responden
+            </p>
+          </div>
+          <Button className="gap-2" onClick={handleManualCreate}>
+            <UserPlus className="w-4 h-4" />
+            Buat Kode Manual
+          </Button>
+        </div>
+
+        {/* Pending Requests */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-warning" />
+              Permintaan Akses Pending
+            </CardTitle>
+            <CardDescription>
+              Permintaan akses yang menunggu persetujuan
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {requests.filter((r) => r.status === 'pending').length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Tidak ada permintaan pending
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {requests
+                  .filter((r) => r.status === 'pending')
+                  .map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-4 bg-warning/5 border border-warning/20 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{request.name}</p>
+                        <p className="text-sm text-muted-foreground">{request.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleApprove(request)}
+                        >
+                          <KeyRound className="w-4 h-4 mr-2" />
+                          Buat Kode
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Users */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Semua Responden</CardTitle>
+                <CardDescription>Daftar responden yang memiliki akses</CardDescription>
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cari responden..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nama</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Kode Akses</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRequests
+                  .filter((r) => r.status === 'approved')
+                  .map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">{request.name}</TableCell>
+                      <TableCell>{request.email}</TableCell>
+                      <TableCell>
+                        <code className="bg-muted px-2 py-1 rounded font-mono text-sm">
+                          {request.code}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="success">Aktif</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(request.code || '')}
+                            title="Salin kode"
+                          >
+                            {copied ? (
+                              <Check className="w-4 h-4" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                          {request.email && request.email !== '-' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => sendAccessCodeEmail(request.email, request.name, request.code || '')}
+                              disabled={isSendingEmail}
+                              title="Kirim ulang ke email"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Generate Code Dialog (for pending requests) */}
+        <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Buat Kode Akses</DialogTitle>
+              <DialogDescription>
+                Kode akses untuk {selectedRequest?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-6">
+              <div className="flex items-center justify-center gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Kode Akses</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-3xl font-mono font-bold bg-muted px-4 py-2 rounded-lg">
+                      {generatedCode}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(generatedCode)}
+                    >
+                      {copied ? (
+                        <Check className="w-5 h-5 text-success" />
+                      ) : (
+                        <Copy className="w-5 h-5" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground text-center mt-4">
+                Email: {selectedRequest?.email}
+              </p>
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
+                Batal
+              </Button>
+              <Button variant="secondary" onClick={() => handleConfirmCode(false)}>
+                Simpan Saja
+              </Button>
+              <Button onClick={() => handleConfirmCode(true)} disabled={isSendingEmail} className="gap-2">
+                {isSendingEmail ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Simpan & Kirim Email
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Manual Code Generation Dialog */}
+        <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                Buat Kode Akses Manual
+              </DialogTitle>
+              <DialogDescription>
+                Buat kode akses baru untuk responden
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="manual-name">Nama Perusahaan/Instansi *</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="manual-name"
+                    placeholder="PT Contoh Perusahaan"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manual-email">Email (opsional)</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="manual-email"
+                    type="email"
+                    placeholder="email@perusahaan.com"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Jika diisi, kode dapat dikirim langsung ke email
+                </p>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2">Kode Akses yang Dibuat:</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-2xl font-mono font-bold bg-muted px-4 py-2 rounded-lg flex-1 text-center">
+                    {generatedCode}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(generatedCode)}
+                  >
+                    {copied ? (
+                      <Check className="w-5 h-5 text-success" />
+                    ) : (
+                      <Copy className="w-5 h-5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setGeneratedCode(generateCode())}
+                    title="Generate ulang"
+                  >
+                    <KeyRound className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setShowManualDialog(false)}>
+                Batal
+              </Button>
+              <Button variant="secondary" onClick={() => handleConfirmManualCode(false)}>
+                Simpan Saja
+              </Button>
+              <Button 
+                onClick={() => handleConfirmManualCode(true)} 
+                disabled={isSendingEmail || !manualEmail} 
+                className="gap-2"
+              >
+                {isSendingEmail ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Simpan & Kirim Email
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </AdminLayout>
+  );
+}
