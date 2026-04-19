@@ -1,7 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { r2Storage } from '@/integrations/r2/client';
 import type { DocumentTemplate } from '@/types';
-
-const BUCKET = 'templates';
 
 type TemplateFormat = DocumentTemplate['format'];
 
@@ -16,13 +14,6 @@ function getContentType(format: TemplateFormat) {
     : 'application/json; charset=utf-8';
 }
 
-function isNotFoundError(error: unknown) {
-  const anyErr = error as any;
-  const msg = String(anyErr?.message ?? '').toLowerCase();
-  const status = anyErr?.statusCode ?? anyErr?.status;
-  return status === 404 || msg.includes('not found') || msg.includes('does not exist');
-}
-
 export const templateStorage = {
   getContentPath,
 
@@ -30,25 +21,11 @@ export const templateStorage = {
     const { templateId, format, content } = params;
     const path = getContentPath(templateId, format);
 
-    // Remove old version explicitly (so overwrite doesn't leave junk)
-    try {
-      await supabase.storage.from(BUCKET).remove([path]);
-    } catch {
-      // ignore
+    if (!r2Storage.isConfigured()) {
+      throw new Error('Storage not configured. Please set R2 environment variables.');
     }
 
-    const blob = new Blob([content], { type: getContentType(format) });
-
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, blob, {
-        upsert: true,
-        contentType: getContentType(format),
-        cacheControl: '3600',
-      });
-
-    if (error) throw error;
-
+    await r2Storage.upload(path, content, getContentType(format));
     return path;
   },
 
@@ -56,14 +33,14 @@ export const templateStorage = {
     const { templateId, format } = params;
     const path = getContentPath(templateId, format);
 
-    const { data, error } = await supabase.storage.from(BUCKET).download(path);
-
-    if (error) {
-      if (isNotFoundError(error)) return null;
-      throw error;
+    if (!r2Storage.isConfigured()) {
+      throw new Error('Storage not configured. Please set R2 environment variables.');
     }
 
-    return await data.text();
+    const blob = await r2Storage.download(path);
+    if (!blob) return null;
+
+    return await blob.text();
   },
 
   async loadAllTemplateContents(templates: Pick<DocumentTemplate, 'id' | 'format'>[]) {

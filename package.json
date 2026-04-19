@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1032.0",
     "@fortune-sheet/react": "^1.0.4",
     "@handsontable/react": "^16.2.0",
     "@hookform/resolvers": "^3.10.0",
