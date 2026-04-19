@@ -58,11 +58,11 @@ jobs:
           path: dist
 
       - name: Deploy to Vercel Preview
-        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel --yes --token ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Production
         if: github.event_name == 'workflow_dispatch' && inputs.production == 'true'
-        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
 
   deploy-cloudflare:
     needs: build
@@ -79,6 +79,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: pusdaop
+          projectName: pusdaop-templates
           directory: dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
