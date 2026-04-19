@@ -34,3 +34,5 @@ ONLYOFFICE_sdkjs.zip
 
 # Supabase local dev
 supabase/
+
+.vercel
