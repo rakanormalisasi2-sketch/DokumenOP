@@ -51,7 +51,7 @@ import LuckyExcel from 'luckyexcel';
 
 // ... imports
 import SmartDocxEditor from '@/components/editors/SmartDocxEditor';
-import { NativeDocxEditor } from '@/components/editors/NativeDocxEditor';
+import SyncfusionDocumentEditor from '@/components/editors/SyncfusionDocumentEditor';
 
 export default function AdminTemplates() {
   const navigate = useNavigate();
@@ -496,21 +496,17 @@ export default function AdminTemplates() {
                 </div>
               ) : (
               <div className='flex-1 h-full'>
-                <NativeDocxEditor
-                  initialUrl={selectedTemplate?.content}
-                  onSave={(blob) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      updateTemplate(selectedTemplate!.id, reader.result as string).then(() => {
-                        toast.success('Dokumen berhasil disimpan');
-                      }).catch(() => {
-                        toast.error('Gagal menyimpan dokumen');
-                      });
-                    };
-                    reader.readAsDataURL(blob);
+                <SyncfusionDocumentEditor
+                  initialContent={selectedTemplate?.content}
+                  fileName={selectedTemplate?.name || 'Dokumen.docx'}
+                  onSave={async (base64) => {
+                    await updateTemplate(selectedTemplate!.id, base64);
+                    // Toast is already inside SyncfusionDocumentEditor
                   }}
-                  templateVariables={fields.map(f => f.name)}
-                  onLoaded={() => setNativeLoading(false)}
+                  onClose={() => {
+                    setShowNativeEditor(false);
+                  }}
+                  fields={fields.map(f => ({ name: f.name, label: f.label }))}
                 />
               </div>
               )

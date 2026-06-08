@@ -4,11 +4,29 @@ import {
     Toolbar,
     WordExport,
     SfdtExport,
+    TextExport,
+    Selection,
+    Search,
+    Editor,
+    ContextMenu,
+    OptionsPane,
+    HyperlinkDialog,
+    TableOfContentsDialog,
+    PageSetupDialog,
+    StyleDialog,
+    ListDialog,
+    ParagraphDialog,
+    FontDialog,
+    TablePropertiesDialog,
+    BordersAndShadingDialog,
+    TableOptionsDialog,
+    CellOptionsDialog,
+    StylesDialog,
+    ImageResizer,
     Inject,
-    DocumentEditorContainer,
 } from '@syncfusion/ej2-react-documenteditor';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save, Printer, FileText } from 'lucide-react';
+import { Loader2, Save, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Import Syncfusion styles
@@ -23,9 +41,9 @@ import '@syncfusion/ej2-dropdowns/styles/material.css';
 import '@syncfusion/ej2-react-documenteditor/styles/material.css';
 
 interface SyncfusionDocumentEditorProps {
-    initialContent?: Blob | null; // Passed as Blob for DOCX
+    initialContent?: string; // Base64 string from DB
     fileName?: string;
-    onSave: (content: Blob) => Promise<void>;
+    onSave: (content: string) => Promise<void>;
     onClose: () => void;
     fields?: { name: string; label: string }[];
 }
@@ -41,41 +59,44 @@ export default function SyncfusionDocumentEditor({
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Use Syncfusion's demo service for opening DOCX (converts to SFDT)
-    // WARNING: This sends data to Syncfusion's public server. For production, host your own.
     const serviceUrl = 'https://services.syncfusion.com/react/production/api/documenteditor/';
 
     useEffect(() => {
         if (containerRef.current && initialContent) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (e.target?.result) {
-                    // The open API expects a FormData with the file
-                    // But the React component has an 'open' method that usually takes SFDT
-                    // To open DOCX, we rely on the system behavior or the 'open' API helper
-                    // Actually, DocumentEditorContainer has an 'open' method that handles POST to 'Import' endpoint
-
-                    // However, for programmatic load from Blob:
-                    const formData = new FormData();
-                    formData.append('files', initialContent, fileName);
-
-                    fetch(`${serviceUrl}Import`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(sfdt => {
-                            containerRef.current?.documentEditor.open(JSON.stringify(sfdt));
-                            setIsLoading(false);
-                        })
-                        .catch(err => {
-                            console.error('Failed to load document', err);
-                            toast.error('Gagal memuat dokumen Word');
-                            setIsLoading(false);
-                        });
+            try {
+                let base64 = initialContent;
+                if (base64.startsWith('data:')) {
+                    base64 = base64.split(',')[1];
                 }
-            };
-            reader.readAsArrayBuffer(initialContent);
+                const binaryString = window.atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+
+                const formData = new FormData();
+                formData.append('files', blob, fileName);
+
+                fetch(`${serviceUrl}Import`, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(sfdt => {
+                        containerRef.current?.documentEditor.open(JSON.stringify(sfdt));
+                        setIsLoading(false);
+                    })
+                    .catch(err => {
+                        console.error('Failed to load document', err);
+                        toast.error('Gagal memuat dokumen Word. Cek koneksi internet Anda.');
+                        setIsLoading(false);
+                    });
+            } catch (e) {
+                console.error("Base64 decode error", e);
+                setIsLoading(false);
+            }
         } else {
             setIsLoading(false);
         }
@@ -85,31 +106,31 @@ export default function SyncfusionDocumentEditor({
         if (!containerRef.current) return;
         setIsSaving(true);
         try {
-            // Save as Blob (DOCX)
             const blob = await containerRef.current.documentEditor.saveAsBlob('Docx');
-            await onSave(blob);
-            toast.success('Dokumen berhasil disimpan');
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                await onSave(base64data);
+                toast.success('Dokumen berhasil disimpan');
+                setIsSaving(false);
+            };
+            reader.readAsDataURL(blob);
         } catch (err) {
             console.error(err);
             toast.error('Gagal menyimpan dokumen');
-        } finally {
             setIsSaving(false);
         }
     };
 
     const insertMergeField = (fieldName: string) => {
         if (containerRef.current) {
-            // Insert standard MergeField
             containerRef.current.documentEditor.editor.insertField('MergeField', fieldName);
         }
     };
 
-    // Custom toolbar item for Merge Fields could be added, 
-    // but for now we'll use a sidebar or external button set.
-
     return (
-        <div className="flex flex-col h-full bg-white relative">
-            <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+        <div className="flex flex-col h-full w-full bg-white relative">
+            <div className="flex items-center justify-between p-2 border-b bg-gray-50 shrink-0">
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={onClose}>
                         Kembali
@@ -117,7 +138,6 @@ export default function SyncfusionDocumentEditor({
                     <span className="font-semibold text-sm">{fileName}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Simple Field Inserter */}
                     <div className="relative group">
                         <Button variant="outline" size="sm" className="gap-2">
                             <FileText className="w-4 h-4" /> Insert Field
@@ -137,7 +157,7 @@ export default function SyncfusionDocumentEditor({
                         </div>
                     </div>
 
-                    <Button onClick={handleSave} disabled={isSaving} size="sm" className="gap-2">
+                    <Button onClick={handleSave} disabled={isSaving} size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Simpan
                     </Button>
@@ -146,19 +166,27 @@ export default function SyncfusionDocumentEditor({
 
             <div className="flex-1 relative overflow-hidden">
                 {isLoading && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm gap-3">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                        <span className="text-sm font-medium">Memuat Editor Dokumen...</span>
                     </div>
                 )}
                 <DocumentEditorContainerComponent
                     ref={containerRef}
                     id="container"
                     height="100%"
+                    width="100%"
                     serviceUrl={serviceUrl}
                     enableToolbar={true}
-                    showPropertiesPane={false}
+                    showPropertiesPane={true}
                 >
-                    <Inject services={[Toolbar, WordExport, SfdtExport]} />
+                    <Inject services={[
+                        Toolbar, WordExport, SfdtExport, TextExport, Selection, Search, Editor,
+                        ContextMenu, OptionsPane, HyperlinkDialog, TableOfContentsDialog, PageSetupDialog,
+                        StyleDialog, ListDialog, ParagraphDialog, FontDialog,
+                        TablePropertiesDialog, BordersAndShadingDialog, TableOptionsDialog, CellOptionsDialog,
+                        StylesDialog, ImageResizer
+                    ]} />
                 </DocumentEditorContainerComponent>
             </div>
         </div>
