@@ -91,83 +91,93 @@ export default function RespondentDashboard() {
   return (
     <RespondentLayout>
       <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="gradient-hero rounded-2xl p-8 text-primary-foreground">
-          <h1 className="text-3xl font-heading font-bold mb-2">
-            Selamat Datang di Portal Dokumen
-          </h1>
-          <p className="text-primary-foreground/80 mb-6">
-            Ajukan data kontrak dan pantau status pengajuan Anda
-          </p>
-          <Link to="/respondent/submit">
-            <Button variant="secondary" size="lg" className="gap-2">
-              <Plus className="w-5 h-5" />
-              Ajukan Data Baru
-            </Button>
-          </Link>
+        {/* Premium Hero Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-8 sm:p-10 shadow-lg">
+          <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+            <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="200" cy="200" r="200" fill="currentColor"/>
+              <circle cx="200" cy="200" r="150" fill="url(#paint0_linear_res)"/>
+              <defs>
+                <linearGradient id="paint0_linear_res" x1="50" y1="50" x2="350" y2="350" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="white" stopOpacity="0"/>
+                  <stop offset="1" stopColor="white"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight mb-2">
+                Portal Layanan Dokumen
+              </h1>
+              <p className="text-slate-300 text-lg max-w-xl">
+                Ajukan data operasi dan pantau status persetujuan dokumen Anda secara transparan.
+              </p>
+            </div>
+            <Link to="/respondent/submit" className="shrink-0">
+              <Button className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold border-0 shadow-md transition-transform active:scale-95 px-6 py-6 h-auto text-base">
+                <Plus className="w-5 h-5 mr-2" />
+                Buat Pengajuan Baru
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
+        {/* Action-Oriented Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/respondent/history" className="block outline-none hover:opacity-90 transition-opacity">
-            <Card className="shadow-card h-full">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Pengajuan</p>
-                    <p className="text-2xl font-bold mt-1">{stats.total}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
-                  </div>
+          <Link to="/respondent/history" className="block outline-none hover:scale-[1.02] transition-transform">
+            <Card className="border-slate-200 shadow-sm h-full">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Pengajuan</p>
+                  <p className="text-3xl font-bold text-slate-800 mt-1">{stats.total}</p>
+                </div>
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-slate-600" />
                 </div>
               </CardContent>
             </Card>
           </Link>
 
-          <Link to="/respondent/history?status=pending" className="block outline-none hover:opacity-90 transition-opacity">
-            <Card className="shadow-card h-full">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Menunggu Review</p>
-                    <p className="text-2xl font-bold mt-1">{stats.pending}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-warning" />
-                  </div>
+          <Link to="/respondent/history?status=pending" className="block outline-none hover:scale-[1.02] transition-transform">
+            <Card className="border-amber-200 bg-amber-50/50 shadow-sm h-full">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-amber-700 uppercase tracking-wider">Menunggu Review</p>
+                  <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</p>
+                </div>
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-600" />
                 </div>
               </CardContent>
             </Card>
           </Link>
 
-          <Link to="/respondent/history?status=approved" className="block outline-none hover:opacity-90 transition-opacity">
-            <Card className="shadow-card h-full">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Disetujui</p>
-                    <p className="text-2xl font-bold mt-1">{stats.approved}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                  </div>
+          <Link to="/respondent/history?status=approved" className="block outline-none hover:scale-[1.02] transition-transform">
+            <Card className="border-emerald-200 bg-emerald-50/30 shadow-sm h-full">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-emerald-700 uppercase tracking-wider">Disetujui</p>
+                  <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.approved}</p>
+                </div>
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                 </div>
               </CardContent>
             </Card>
           </Link>
 
-          <Link to="/respondent/history?status=revision" className="block outline-none hover:opacity-90 transition-opacity">
-            <Card className="shadow-card h-full">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Perlu Revisi</p>
-                    <p className="text-2xl font-bold mt-1">{stats.revision}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                  </div>
+          <Link to="/respondent/history?status=revision" className="block outline-none hover:scale-[1.02] transition-transform">
+            <Card className="border-rose-200 bg-rose-50/50 shadow-sm h-full">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-rose-700 uppercase tracking-wider">Perlu Revisi</p>
+                  <p className="text-3xl font-bold text-rose-600 mt-1">{stats.revision}</p>
+                </div>
+                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-rose-600" />
                 </div>
               </CardContent>
             </Card>
@@ -175,63 +185,64 @@ export default function RespondentDashboard() {
         </div>
 
         {/* Recent Submissions */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle>Pengajuan Terbaru (1 Tahun Terakhir)</CardTitle>
-                <CardDescription>Pantau status data yang telah diajukan</CardDescription>
-              </div>
-              <div className="flex items-center gap-3">
-                <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Urutkan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="terbaru">Terbaru</SelectItem>
-                    <SelectItem value="terlama">Terlama</SelectItem>
-                    <SelectItem value="status">Berdasarkan Status</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Link to="/respondent/history">
-                  <Button variant="ghost" className="gap-2">
-                    Lihat Semua
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
+        <div className="mt-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-800 tracking-tight">Pengajuan Terbaru (1 Tahun Terakhir)</h2>
+              <p className="text-sm text-slate-500">Pantau status data yang telah diajukan</p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <div className="flex items-center gap-3">
+              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <SelectTrigger className="w-[160px] bg-white">
+                  <SelectValue placeholder="Urutkan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="terbaru">Terbaru</SelectItem>
+                  <SelectItem value="terlama">Terlama</SelectItem>
+                  <SelectItem value="status">Berdasarkan Status</SelectItem>
+                </SelectContent>
+              </Select>
+              <Link to="/respondent/history">
+                <Button variant="ghost" className="gap-2 text-primary hover:text-primary/80">
+                  Lihat Semua
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
             {sortedSubmissions.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">Belum ada pengajuan di tahun ini</p>
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-slate-400" />
+                </div>
+                <p className="text-slate-500 mb-6">Belum ada pengajuan di tahun ini</p>
                 <Link to="/respondent/dokumen-awal">
-                  <Button>Ajukan Dokumen Awal</Button>
+                  <Button className="bg-slate-900 text-white hover:bg-slate-800">Ajukan Dokumen Awal</Button>
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="divide-y divide-slate-100">
                 {sortedSubmissions.slice(0, 5).map((submission) => (
                   <div
                     key={submission.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg hover:bg-muted/60 transition-colors border"
+                    className="flex flex-col md:flex-row md:items-center justify-between p-5 hover:bg-slate-50 transition-colors"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5 text-slate-500" />
                       </div>
                       <div>
-                        <p className="font-semibold">
+                        <p className="font-semibold text-slate-800 text-base">
                           {submission.data.nama_pekerjaan || 'Tanpa Judul'}
                         </p>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm text-slate-500">
+                          <span className="font-medium">
                             No: {submission.data.nomor_kontrak || '-'}
                           </span>
-                          <span className="text-xs text-muted-foreground hidden sm:inline">•</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="hidden sm:inline">•</span>
+                          <span>
                             {format(new Date(submission.createdAt), 'dd MMM yyyy', { locale: id })}
                           </span>
                         </div>
@@ -262,8 +273,8 @@ export default function RespondentDashboard() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Detail Dialog */}
         <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
