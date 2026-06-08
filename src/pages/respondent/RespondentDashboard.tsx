@@ -17,6 +17,7 @@ import {
   Printer,
   FileSpreadsheet,
   Eye,
+  MessageSquare,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import DocumentPreview from '@/components/editors/DocumentPreview';
 import DocumentAnnotator from '@/components/submission/DocumentAnnotator';
+import { SubmissionStepper } from '@/components/submission/SubmissionStepper';
 import { toast } from 'sonner';
 
 export default function RespondentDashboard() {
@@ -275,8 +277,11 @@ export default function RespondentDashboard() {
 
             {selectedSubmission && (
               <div className="space-y-4 py-4">
+                <div className="mb-2">
+                  <SubmissionStepper status={selectedSubmission.status} />
+                </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
+                  <span className="text-sm text-muted-foreground">Status Pengecekan</span>
                   <StatusBadge status={selectedSubmission.status} />
                 </div>
 
@@ -327,11 +332,19 @@ export default function RespondentDashboard() {
                   <p className="text-sm text-muted-foreground mt-1">
                     Ada data yang memerlukan perbaikan. Silakan periksa feedback dari admin.
                   </p>
-                  <Link to="/respondent/history?status=revision" className="mt-3 inline-block">
-                    <Button variant="outline" size="sm">
-                      Lihat Detail
-                    </Button>
-                  </Link>
+                  <div className="flex gap-2 mt-3">
+                    <Link to="/respondent/history?status=revision" className="inline-block">
+                      <Button variant="outline" size="sm">
+                        Lihat Detail
+                      </Button>
+                    </Link>
+                    <a href="https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20terkait%20revisi%20dokumen%20saya." target="_blank" rel="noopener noreferrer">
+                      <Button variant="default" size="sm" className="bg-[#25D366] hover:bg-[#20bd5a] text-white gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Hubungi Admin
+                      </Button>
+                    </a>
+                  </div>
                 </div>
               </div>
             </CardContent>

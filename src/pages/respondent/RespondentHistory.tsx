@@ -38,6 +38,7 @@ import { format, isAfter, isBefore, subMonths, subYears } from 'date-fns';
 import { id } from 'date-fns/locale';
 import DocumentPreview from '@/components/editors/DocumentPreview';
 import DocumentAnnotator from '@/components/submission/DocumentAnnotator';
+import { SubmissionStepper } from '@/components/submission/SubmissionStepper';
 import { toast } from 'sonner';
 
 export default function RespondentHistory() {
@@ -313,6 +314,12 @@ export default function RespondentHistory() {
                           <p className="text-sm text-muted-foreground mt-1">
                             {submission.adminFeedback}
                           </p>
+                          <a href="https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20terkait%20revisi%20dokumen%20saya." target="_blank" rel="noopener noreferrer" className="mt-3 inline-block">
+                            <Button variant="default" size="sm" className="bg-[#25D366] hover:bg-[#20bd5a] text-white gap-2">
+                              <MessageSquare className="w-4 h-4" />
+                              Hubungi Admin via WhatsApp
+                            </Button>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -335,8 +342,11 @@ export default function RespondentHistory() {
 
             {selectedSubmission && (
               <div className="space-y-4 py-4">
+                <div className="mb-2">
+                  <SubmissionStepper status={selectedSubmission.status} />
+                </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
+                  <span className="text-sm text-muted-foreground">Status Pengecekan</span>
                   <StatusBadge status={selectedSubmission.status} />
                 </div>
 
