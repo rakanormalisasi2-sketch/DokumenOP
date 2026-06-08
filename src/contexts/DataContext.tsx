@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { FormField, Submission, DocumentTemplate, DocumentType, DocumentStatus, DocumentErrorReport, AdendumDocument, AccessRequest, ContractDraft } from '@/types';
 import { templateStorage } from '@/lib/templateStorage';
+import { r2Storage } from '@/integrations/r2/client';
 import { CONTRACT_FORMATS } from '@/lib/contractFormats';
 
 interface DataContextType {

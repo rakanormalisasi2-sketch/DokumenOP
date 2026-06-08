@@ -261,6 +261,10 @@ export default function AdminTemplates() {
           const base64data = reader.result as string;
           try {
             await updateTemplate(template.id, base64data);
+            if (selectedTemplate && selectedTemplate.id === template.id) {
+              setSelectedTemplate({ ...selectedTemplate, content: base64data });
+              setEditContent(base64data);
+            }
             toast.success(`File "${file.name}" berhasil diupload & disimpan.`);
           } catch (e) {
             toast.error("Gagal menyimpan file.");
@@ -277,6 +281,10 @@ export default function AdminTemplates() {
             const sheetData = JSON.stringify(exportJson.sheets);
             try {
               await updateTemplate(uploadingTemplateId, sheetData);
+              if (selectedTemplate && selectedTemplate.id === uploadingTemplateId) {
+                setSelectedTemplate({ ...selectedTemplate, content: sheetData });
+                setEditContent(sheetData);
+              }
               toast.success(`File "${file.name}" berhasil diupload & tersimpan`);
             } catch (e: any) {
               console.error('Persist template failed:', e);
