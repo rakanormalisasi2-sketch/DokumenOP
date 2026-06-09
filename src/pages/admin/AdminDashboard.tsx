@@ -1,20 +1,21 @@
 import { useData } from '@/contexts/DataContext';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DOCUMENT_TYPE_LABELS } from '@/types';
 import {
-  FileText,
+  Folder,
+  TrendingUp,
   Clock,
   CheckCircle2,
   AlertCircle,
-  ArrowRight,
   Calendar,
+  User,
+  Key,
+  Check,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 export default function AdminDashboard() {
   const { submissions } = useData();
@@ -30,144 +31,188 @@ export default function AdminDashboard() {
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
-  const currentDate = format(new Date(), 'EEEE, dd MMMM yyyy', { locale: id });
+  const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: id });
 
   return (
     <AdminLayout>
-      <div className="space-y-6 max-w-7xl mx-auto pb-8">
-        {/* Elegant Hero Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white p-8 sm:p-10 shadow-lg">
-          <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
-            <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="200" cy="200" r="200" fill="currentColor"/>
-              <circle cx="200" cy="200" r="150" fill="url(#paint0_linear)"/>
-              <defs>
-                <linearGradient id="paint0_linear" x1="50" y1="50" x2="350" y2="350" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="white" stopOpacity="0"/>
-                  <stop offset="1" stopColor="white"/>
-                </linearGradient>
-              </defs>
-            </svg>
+      {/* Page Title */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="font-headline-lg text-3xl font-semibold text-on-surface">Tinjauan Operasional</h1>
+          <p className="font-body-md text-base text-on-surface-variant mt-1">Ringkasan aktivitas dan status pengajuan dokumen hari ini.</p>
+        </div>
+        <div className="text-sm font-body-sm text-on-surface-variant flex items-center gap-2 bg-surface-container py-1.5 px-4 rounded-full border border-outline-variant w-fit">
+          <Calendar className="w-4 h-4" />
+          {currentDate}
+        </div>
+      </div>
+
+      {/* Bento Grid: Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stat Card 1 */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col justify-between h-32 hover:border-secondary transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="font-label-md text-sm font-semibold text-on-surface-variant">Total Pengajuan</span>
+            <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center">
+              <Folder className="w-4 h-4 text-primary" />
+            </div>
           </div>
-          
+          <div>
+            <div className="font-display-lg text-4xl font-bold text-on-surface">{stats.total}</div>
+            <div className="font-body-sm text-xs text-surface-tint mt-1 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-secondary" />
+              <span>Semua waktu</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stat Card 2 */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col justify-between h-32 hover:border-secondary transition-colors relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-tertiary-fixed/20 to-transparent pointer-events-none"></div>
+          <div className="flex justify-between items-start relative z-10">
+            <span className="font-label-md text-sm font-semibold text-on-surface-variant">Menunggu Review</span>
+            <div className="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center">
+              <Clock className="w-4 h-4 text-tertiary-container" />
+            </div>
+          </div>
           <div className="relative z-10">
-            <div className="flex items-center gap-2 text-slate-300 mb-4 text-sm font-medium tracking-wide">
-              <Calendar className="w-4 h-4" />
-              {currentDate}
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight mb-2">
-              Selamat Datang, Admin PUSDAOP
-            </h1>
-            <p className="text-slate-400 max-w-2xl text-lg mb-8">
-              Sistem Pengelolaan Dokumen Operasi. Anda memiliki <span className="text-amber-400 font-semibold">{stats.pending} dokumen</span> yang memerlukan peninjauan hari ini.
-            </p>
-            
-            <div className="flex gap-4">
-              <Link to="/admin/submissions?status=pending">
-                <Button className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold border-0 shadow-md transition-transform active:scale-95">
-                  Tinjau Dokumen
-                </Button>
-              </Link>
-            </div>
+            <div className="font-display-lg text-4xl font-bold text-on-surface">{stats.pending}</div>
+            <div className="font-body-sm text-xs text-on-tertiary-container mt-1 font-medium">Perlu perhatian segera</div>
           </div>
         </div>
 
-        {/* Action-Oriented Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-5 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Dokumen</p>
-                <p className="text-3xl font-bold text-slate-800 mt-1">{stats.total}</p>
-              </div>
-              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                <FileText className="w-6 h-6 text-slate-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
-            <CardContent className="p-5 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-amber-700 uppercase tracking-wider">Menunggu Review</p>
-                <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</p>
-              </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-rose-200 bg-rose-50/50 shadow-sm">
-            <CardContent className="p-5 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-rose-700 uppercase tracking-wider">Perlu Revisi</p>
-                <p className="text-3xl font-bold text-rose-600 mt-1">{stats.revision}</p>
-              </div>
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-rose-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-emerald-200 shadow-sm">
-            <CardContent className="p-5 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Telah Disetujui</p>
-                <p className="text-3xl font-bold text-slate-800 mt-1">{stats.approved}</p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Stat Card 3 */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col justify-between h-32 hover:border-secondary transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="font-label-md text-sm font-semibold text-on-surface-variant">Disetujui</span>
+            <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-on-surface" />
+            </div>
+          </div>
+          <div>
+            <div className="font-display-lg text-4xl font-bold text-on-surface">{stats.approved}</div>
+            <div className="font-body-sm text-xs text-surface-tint mt-1">Total disetujui</div>
+          </div>
         </div>
 
-        {/* Clean Data List */}
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-slate-800 tracking-tight">Aktivitas Pengajuan Terbaru</h2>
-            <Link to="/admin/submissions" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
-              Lihat Semua <ArrowRight className="w-4 h-4" />
-            </Link>
+        {/* Stat Card 4 */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col justify-between h-32 hover:border-secondary transition-colors relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-error-container/20 to-transparent pointer-events-none"></div>
+          <div className="flex justify-between items-start relative z-10">
+            <span className="font-label-md text-sm font-semibold text-on-surface-variant">Perlu Revisi</span>
+            <div className="w-8 h-8 rounded-full bg-error-container flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 text-error" />
+            </div>
           </div>
-          
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            {recentSubmissions.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
-                Belum ada pengajuan masuk.
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {recentSubmissions.map((submission) => (
-                  <div
-                    key={submission.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
-                        <FileText className="w-5 h-5 text-slate-500" />
-                      </div>
-                      <div>
-                        <Link to={`/admin/submissions?id=${submission.id}`} className="font-semibold text-slate-800 hover:text-primary transition-colors text-base">
-                          {submission.data.nama_pekerjaan || 'Dokumen Tanpa Judul'}
+          <div className="relative z-10">
+            <div className="font-display-lg text-4xl font-bold text-on-surface">{stats.revision}</div>
+            <div className="font-body-sm text-xs text-error mt-1 flex items-center gap-1">
+              <span>Dikembalikan ke pemohon</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Complex Layout Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Table Area (Span 2) */}
+        <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
+          <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+            <h3 className="font-title-lg text-lg font-semibold text-on-surface">Pengajuan Terbaru</h3>
+            <Link to="/admin/submissions" className="text-secondary font-label-md text-sm hover:underline">Lihat Semua</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-container-low text-on-surface font-label-md text-sm border-b border-outline-variant">
+                  <th className="py-2 px-4 font-semibold">Pemohon &amp; Pekerjaan</th>
+                  <th className="py-2 px-4 font-semibold">Jenis Dokumen</th>
+                  <th className="py-2 px-4 font-semibold">Status</th>
+                  <th className="py-2 px-4 font-semibold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="font-body-sm text-sm text-on-surface-variant">
+                {recentSubmissions.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-on-surface-variant">
+                      Belum ada pengajuan masuk.
+                    </td>
+                  </tr>
+                ) : (
+                  recentSubmissions.map((submission) => (
+                    <tr key={submission.id} className="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-on-surface">{submission.data.nama_pekerjaan || 'Tanpa Judul'}</div>
+                        <div className="text-[12px]">{submission.respondentName}</div>
+                      </td>
+                      <td className="py-3 px-4">{DOCUMENT_TYPE_LABELS[submission.documentType]}</td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={submission.status} />
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link to={`/admin/submissions?id=${submission.id}`}>
+                          <button className="bg-secondary text-on-secondary px-3 py-1.5 rounded hover:bg-on-secondary-fixed-variant transition-colors font-label-md text-[13px]">Detail</button>
                         </Link>
-                        <div className="flex items-center gap-2 mt-1.5 text-sm text-slate-500">
-                          <span className="font-medium text-slate-700">{submission.respondentName}</span>
-                          <span>•</span>
-                          <span>{DOCUMENT_TYPE_LABELS[submission.documentType]}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span className="hidden sm:inline">{format(new Date(submission.updatedAt), 'dd MMM yyyy, HH:mm', { locale: id })}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 sm:mt-0 flex items-center pl-14 sm:pl-0">
-                      <StatusBadge status={submission.status} />
-                    </div>
-                  </div>
-                ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Notifications / Secondary Actions (Span 1) */}
+        <div className="lg:col-span-1 flex flex-col gap-4">
+          {/* Notification Card */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-title-lg text-lg font-semibold text-on-surface flex items-center gap-2">
+                <Key className="w-5 h-5 text-secondary" />
+                Permintaan Akses Baru
+              </h3>
+              <span className="bg-error text-on-error font-code-sm text-[12px] px-2 py-0.5 rounded-full">2</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="p-3 bg-surface-bright border border-outline-variant rounded-lg flex items-start gap-3 hover:border-secondary transition-colors cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
+                  <User className="text-on-surface-variant w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-label-md text-sm font-semibold text-on-surface">Budi (Dinas PU)</div>
+                  <div className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">Meminta akses modul Responden.</div>
+                </div>
+                <button className="text-secondary hover:bg-secondary-container/20 p-1 rounded transition-colors">
+                  <Check className="w-4 h-4" />
+                </button>
               </div>
-            )}
+              
+              <div className="p-3 bg-surface-bright border border-outline-variant rounded-lg flex items-start gap-3 hover:border-secondary transition-colors cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
+                  <User className="text-on-surface-variant w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-label-md text-sm font-semibold text-on-surface">Admin PT. Cipta</div>
+                  <div className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">Pendaftaran entitas perusahaan.</div>
+                </div>
+                <button className="text-secondary hover:bg-secondary-container/20 p-1 rounded transition-colors">
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <button className="w-full mt-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-sm hover:bg-surface-container transition-colors">Kelola Akses Pengguna</button>
+          </div>
+
+          {/* System Status Card */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+            <h3 className="font-title-lg text-lg font-semibold text-on-surface mb-2">Status Sistem</h3>
+            <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div className="w-3 h-3 rounded-full bg-secondary-container ring-4 ring-secondary-fixed-dim"></div>
+              <div className="flex-1">
+                <div className="font-label-md text-sm font-semibold text-on-surface">Semua Layanan Normal</div>
+                <div className="font-body-sm text-[12px] text-surface-tint">Uptime: 99.98% (30 hari terakhir)</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
