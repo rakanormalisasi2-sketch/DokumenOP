@@ -216,7 +216,7 @@ const SystemFlowDocs = () => {
   );
 };
 
-const writtenFlow = \`
+const writtenFlow = `
 ═══════════════════════════════════════════════════════════════
               ALUR SISTEM MANAJEMEN DOKUMEN (DOCMS)
 ═══════════════════════════════════════════════════════════════
@@ -251,6 +251,7 @@ FASE 5: CETAK & DOWNLOAD
 ────────────────────────
 1. Mail-merge otomatis dijalankan
 2. Dokumen BAPHP, BAST dll siap didownload
-\`;
+`;
 
 export default SystemFlowDocs;
+
