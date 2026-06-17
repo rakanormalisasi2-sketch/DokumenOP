@@ -546,34 +546,11 @@ export default function AdminTemplates() {
                           Edit Dokumen (Native OOXML)
                         </h3>
                         <p className="text-muted-foreground text-sm mb-4">
-                          Editor dokumen berkualitas tinggi dengan Ribbon lengkap (Layout, Insert, References, Review). Format DOCX asli tanpa konversi HTML.
+                          Edit template dokumen langsung di dalam browser menggunakan editor dengan fitur lengkap setara Microsoft Word.
                         </p>
                         <Button onClick={() => { setNativeLoading(true); setShowNativeEditor(true); }} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-                          Buka Native Editor
+                          Buka Editor Dokumen
                         </Button>
-                      </div>
-
-                      {/* OPTION 2: SMART EDITOR (Mail Merge + Auto Fill) */}
-                      <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg flex items-center gap-2 mb-2">
-                          <Wand2 className="w-5 h-5 text-primary" />
-                          Smart Editor (Mail Merge)
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-4">
-                          Edit template dengan mail merge otomatis. Isi formulir data dari database ke template dokumen.
-                        </p>
-                        <Button onClick={() => setShowSmartEditor(true)} className="w-full sm:w-auto" variant="outline">
-                          Edit Dokumen
-                        </Button>
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">Atau Manual</span>
-                        </div>
                       </div>
 
                       {/* OPTION 2: UPLOAD/DOWNLOAD */}

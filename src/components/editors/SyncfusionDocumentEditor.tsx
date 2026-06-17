@@ -125,7 +125,7 @@ export default function SyncfusionDocumentEditor({
 
     const insertMergeField = (fieldName: string) => {
         if (containerRef.current) {
-            containerRef.current.documentEditor.editor.insertField('MergeField', fieldName);
+            containerRef.current.documentEditor.editor.insertText(`{{${fieldName}}}`);
         }
     };
 
