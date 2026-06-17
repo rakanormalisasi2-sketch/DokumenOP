@@ -5,7 +5,7 @@ import "./index.css";
 
 // Register Syncfusion License Key
 // Replace with your valid license key
-registerLicense('YOUR_LICENSE_KEY_GOES_HERE');
+registerLicense('Ngo9BigBOggjHTQxAR8/V1JHaF1cXmhOYVJxWmFZfVhgfV9DYlZRTGYuP1ZhSXxVdkNiXn9XdXdUTmhUWUV9XEE=');
 
 // Startup diagnostics
 const missing: string[] = [];
