@@ -496,7 +496,7 @@ export default function AdminTemplates() {
                   onClose={() => {
                     setShowNativeEditor(false);
                   }}
-                  fields={fields.map(f => ({ name: f.name, label: f.label }))}
+                  fields={fields.map(f => ({ name: f.name, label: f.label, phase: f.phase, type: f.type }))}
                 />
               </div>
             ) : showSmartEditor && selectedTemplate?.format === 'docx' ? (

@@ -22,6 +22,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { uploadToGoogleDrive } from '@/lib/gdrive';
 
 export default function RespondentDokumenAkhir() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function RespondentDokumenAkhir() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [selectedAwalId, setSelectedAwalId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
 
   // Get approved 'awal' submissions for this respondent
   const approvedAwalSubmissions = submissions.filter(
@@ -53,6 +55,24 @@ export default function RespondentDokumenAkhir() {
 
   const handleInputChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileUpload = async (name: string, file: File | null) => {
+    if (!file) {
+      handleInputChange(name, '');
+      return;
+    }
+    setUploadingFields(prev => ({ ...prev, [name]: true }));
+    try {
+      const folderName = formData.nama_pelaksana || formData.nama_perusahaan || user?.name || 'Dokumen_Uploads';
+      const link = await uploadToGoogleDrive(file, folderName);
+      handleInputChange(name, link);
+      toast.success(`File ${file.name} berhasil diunggah.`);
+    } catch (err) {
+      toast.error(`Gagal mengunggah file. Pastikan Google Drive terhubung.`);
+    } finally {
+      setUploadingFields(prev => ({ ...prev, [name]: false }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -199,6 +219,22 @@ export default function RespondentDokumenAkhir() {
                             ))}
                           </SelectContent>
                         </Select>
+                      ) : field.type === 'file' ? (
+                        <div className="flex flex-col space-y-2">
+                          <Input
+                            id={field.name}
+                            type="file"
+                            onChange={(e) => handleFileUpload(field.name, e.target.files?.[0] || null)}
+                            disabled={isLocked || uploadingFields[field.name]}
+                            className={isLocked ? 'bg-muted opacity-80 cursor-not-allowed' : ''}
+                          />
+                          {uploadingFields[field.name] && <p className="text-xs text-blue-500 animate-pulse">Mengunggah ke Google Drive...</p>}
+                          {formData[field.name] && !uploadingFields[field.name] && (
+                            <p className="text-xs text-green-600 truncate flex items-center gap-1">
+                               <FileText className="w-3 h-3" /> <a href={formData[field.name]} target="_blank" rel="noopener noreferrer" className="underline hover:text-green-700">File berhasil diunggah (Lihat)</a>
+                            </p>
+                          )}
+                        </div>
                       ) : (
                         <Input
                           id={field.name}

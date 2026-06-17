@@ -46,7 +46,7 @@ interface SyncfusionDocumentEditorProps {
     fileName?: string;
     onSave: (content: string) => Promise<void>;
     onClose: () => void;
-    fields?: { name: string; label: string }[];
+    fields?: { name: string; label: string; phase?: string; type?: string }[];
 }
 
 export default function SyncfusionDocumentEditor({
@@ -61,6 +61,9 @@ export default function SyncfusionDocumentEditor({
     const [isLoading, setIsLoading] = useState(true);
 
     const serviceUrl = 'https://services.syncfusion.com/react/production/api/documenteditor/';
+
+    // Filter out file types because files cannot be mailmerged
+    const mergeFields = fields.filter(f => f.type !== 'file');
 
     useEffect(() => {
         if (containerRef.current && initialContent) {
@@ -143,18 +146,39 @@ export default function SyncfusionDocumentEditor({
                         <Button variant="outline" size="sm" className="gap-2">
                             <FileText className="w-4 h-4" /> Insert Field
                         </Button>
-                        <div className="absolute right-0 top-full mt-1 bg-white border shadow-lg rounded-md p-2 w-48 max-h-60 overflow-y-auto hidden group-hover:block z-50">
-                            {fields.length === 0 ? <p className="text-xs text-gray-500 p-2">Tidak ada field</p> :
-                                fields.map(f => (
-                                    <button
-                                        key={f.name}
-                                        className="text-left w-full text-sm px-2 py-1 hover:bg-gray-100 rounded"
-                                        onClick={() => insertMergeField(f.name)}
-                                    >
-                                        {f.label}
-                                    </button>
-                                ))
-                            }
+                        <div className="absolute right-0 top-full mt-1 bg-white border shadow-lg rounded-md p-2 w-56 max-h-80 overflow-y-auto hidden group-hover:block z-50">
+                            {mergeFields.length === 0 ? <p className="text-xs text-gray-500 p-2">Tidak ada field</p> : (
+                                <>
+                                    <div className="mb-2">
+                                        <div className="text-xs font-bold text-gray-400 uppercase px-2 mb-1">Persiapan</div>
+                                        {mergeFields.filter(f => f.phase === 'persiapan').length === 0 ? (
+                                            <p className="text-xs text-gray-400 px-2 italic">Kosong</p>
+                                        ) : mergeFields.filter(f => f.phase === 'persiapan').map(f => (
+                                            <button
+                                                key={f.name}
+                                                className="text-left w-full text-sm px-2 py-1 hover:bg-gray-100 rounded"
+                                                onClick={() => insertMergeField(f.name)}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="border-t pt-2">
+                                        <div className="text-xs font-bold text-gray-400 uppercase px-2 mb-1">Pelaksanaan</div>
+                                        {mergeFields.filter(f => f.phase === 'pelaksanaan').length === 0 ? (
+                                            <p className="text-xs text-gray-400 px-2 italic">Kosong</p>
+                                        ) : mergeFields.filter(f => f.phase === 'pelaksanaan').map(f => (
+                                            <button
+                                                key={f.name}
+                                                className="text-left w-full text-sm px-2 py-1 hover:bg-gray-100 rounded"
+                                                onClick={() => insertMergeField(f.name)}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

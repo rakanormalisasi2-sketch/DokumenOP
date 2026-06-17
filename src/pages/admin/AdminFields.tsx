@@ -34,6 +34,7 @@ import {
   Calendar,
   AlignLeft,
   List,
+  FileUp,
 } from 'lucide-react';
 
 const fieldTypeIcons = {
@@ -43,6 +44,7 @@ const fieldTypeIcons = {
   textarea: AlignLeft,
   select: List,
   terbilang: Type,
+  file: FileUp,
 };
 
 const fieldTypeLabels = {
@@ -52,6 +54,7 @@ const fieldTypeLabels = {
   textarea: 'Teks Panjang',
   select: 'Pilihan',
   terbilang: 'Terbilang (Teks Ejaan Angka)',
+  file: 'File Upload (Supabase)',
 };
 
 export default function AdminFields() {
@@ -445,7 +448,8 @@ export default function AdminFields() {
                     <SelectItem value="date">Tanggal</SelectItem>
                     <SelectItem value="textarea">Teks Panjang</SelectItem>
                     <SelectItem value="select">Pilihan</SelectItem>
-                    <SelectItem value="terbilang">Terbilang (Otomatis dari Angka)</SelectItem>
+                    <SelectItem value="terbilang">Terbilang (Teks Ejaan Angka)</SelectItem>
+                    <SelectItem value="file">File Upload (G-Drive)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

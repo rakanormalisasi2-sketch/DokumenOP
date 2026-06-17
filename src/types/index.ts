@@ -52,7 +52,7 @@ export interface FormField {
   id: string;
   name: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'textarea' | 'select' | 'terbilang';
+  type: 'text' | 'number' | 'date' | 'textarea' | 'select' | 'terbilang' | 'file';
   placeholder?: string;
   options?: string[];
   required: boolean;

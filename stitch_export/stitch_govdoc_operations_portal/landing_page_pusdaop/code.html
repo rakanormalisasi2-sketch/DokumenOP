@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PUSDAOP - Portal Operasi Dokumen Pemerintah</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#270c00",
+                        "background": "#f7f9fb",
+                        "on-secondary-container": "#00476e",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#001d31",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "inverse-surface": "#2d3133",
+                        "primary-container": "#1e293b",
+                        "primary-fixed-dim": "#bcc7de",
+                        "outline-variant": "#c5c6cd",
+                        "tertiary-fixed": "#ffdbca",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#8590a6",
+                        "on-surface-variant": "#45474c",
+                        "secondary-fixed-dim": "#93ccff",
+                        "tertiary-fixed-dim": "#ffb68e",
+                        "surface-dim": "#d8dadc",
+                        "surface-container": "#eceef0",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-fixed": "#111c2d",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-tint": "#545f73",
+                        "surface": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "tertiary-container": "#471c00",
+                        "primary-fixed": "#d8e3fb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#bcc7de",
+                        "on-surface": "#191c1e",
+                        "surface-container-highest": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-container": "#5bb8fe",
+                        "secondary": "#006398",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#de722c",
+                        "outline": "#75777d",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#331200",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#cce5ff",
+                        "on-tertiary-fixed-variant": "#763300",
+                        "primary": "#091426",
+                        "on-secondary-fixed-variant": "#004b73"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "xxl": "48px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "code-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "code-sm": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar (Landing Page Variant - No SideNav offset) -->
+<header class="bg-surface-container-lowest border-b border-outline-variant docked full-width top-0 sticky z-40 flex justify-between items-center w-full px-gutter h-16">
+<div class="flex items-center gap-md">
+<span class="font-title-lg text-title-lg font-black text-primary">PUSDAOP</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-label-md text-label-md text-secondary font-bold border-b-2 border-secondary pb-1" href="#">Beranda</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Prosedur</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Regulasi</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors" href="#">Kontak</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<button class="font-label-md text-label-md bg-secondary text-on-secondary px-lg py-sm rounded hover:bg-secondary/90 transition-colors">Masuk Portal</button>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative bg-surface w-full py-xxl md:py-[80px] overflow-hidden border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-gutter relative z-10 grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
+<div class="flex flex-col gap-md">
+<div class="inline-flex items-center gap-2 bg-secondary-container/20 text-secondary font-label-md text-label-md px-3 py-1 rounded-full w-max">
+<span class="material-symbols-outlined text-sm" data-icon="verified">verified</span>
+                        Sistem Resmi Pemerintah
+                    </div>
+<h1 class="font-display-lg text-display-lg text-primary">Portal Operasi Dokumen Pemerintah</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                        Sistem manajemen administrasi kontrak pekerjaan umum yang efisien, transparan, dan terintegrasi untuk mempercepat birokrasi.
+                    </p>
+<div class="flex flex-wrap gap-md mt-sm">
+<button class="font-label-md text-label-md bg-primary text-on-primary px-xl py-md rounded shadow-sm hover:bg-primary/90 transition-colors flex items-center gap-2">
+                            Masuk ke Portal
+                            <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="font-label-md text-label-md bg-surface-container-lowest text-primary border border-outline-variant px-xl py-md rounded hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="account_tree">account_tree</span>
+                            Lihat Alur Sistem
+                        </button>
+</div>
+</div>
+<div class="hidden md:block relative h-[400px] w-full rounded-xl overflow-hidden border border-outline-variant bg-surface-container-lowest shadow-sm">
+<img alt="Dashboard Preview" class="object-cover w-full h-full opacity-90" data-alt="A modern, high-fidelity UI dashboard interface displayed on a sleek monitor. The screen shows complex data tables, official document lists, and analytical charts in a professional light mode setting. The color palette is composed of crisp whites, soft slate grays, and authoritative corporate blue accents. Soft, diffused lighting creates a clean, trustworthy atmosphere suitable for a government administrative portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGm7qYHchX5EY-9_ttEXhN-XYCpKzP0bVoIP_FxOqb1TfyXkywuSs5vNyLNvLS57qu3F0rpzMXBEb8CrM4Ih5eMsnxkMQVmiYN16lfudN14Ls6WFhgvijyP2q1E3V0TQS1vBW6t8TD0tAg1qSD46yaVjQudaol2CpMGtD0DcivkiaVAeHSTrbDo3O3w_hAQ-eHg9t_bb2v71xSM9OdUSoINWJMubOgpcLdKUqc6orDt4-uCvYIbJ760Tj-9bxuTILLfXeFB8KUEQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/50 to-transparent"></div>
+</div>
+</div>
+<!-- Decorative background pattern -->
+<div class="absolute inset-0 pointer-events-none opacity-5" style="background-image: radial-gradient(#091426 1px, transparent 1px); background-size: 24px 24px;"></div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-xxl bg-background">
+<div class="max-w-container-max mx-auto px-gutter">
+<div class="text-center mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-sm">Fitur Utama Platform</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Dirancang khusus untuk memenuhi standar operasional administrasi pemerintah modern.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Feature 1: Pengajuan Digital -->
+<div class="col-span-1 md:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl flex flex-col justify-between hover:border-secondary/30 transition-colors group">
+<div>
+<div class="w-12 h-12 bg-secondary-fixed rounded-lg flex items-center justify-center mb-md text-secondary">
+<span class="material-symbols-outlined text-[28px]" data-icon="description">description</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-xs">Pengajuan Dokumen Digital</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Unggah dan kelola berkas administrasi kontrak pekerjaan umum secara terpusat tanpa perlu dokumen fisik.</p>
+</div>
+</div>
+<!-- Feature 2: Verifikasi -->
+<div class="col-span-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl flex flex-col justify-between hover:border-secondary/30 transition-colors group">
+<div>
+<div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center mb-md text-primary">
+<span class="material-symbols-outlined text-[28px]" data-icon="fact_check">fact_check</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-xs">Verifikasi Real-time</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Pantau status persetujuan dokumen dengan notifikasi instan pada setiap tahapan.</p>
+</div>
+</div>
+<!-- Feature 3: Mail Merge -->
+<div class="col-span-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl flex flex-col justify-between hover:border-secondary/30 transition-colors group">
+<div>
+<div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center mb-md text-primary">
+<span class="material-symbols-outlined text-[28px]" data-icon="print">print</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-xs">Cetak Otomatis</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Hasilkan dokumen resmi berformat standar dengan fitur Mail Merge yang terintegrasi langsung dengan database.</p>
+</div>
+</div>
+<!-- Feature 4: Keamanan -->
+<div class="col-span-1 md:col-span-2 bg-primary text-on-primary border border-primary-container rounded-xl p-xl flex flex-col justify-between relative overflow-hidden">
+<div class="relative z-10">
+<div class="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center mb-md text-secondary-fixed">
+<span class="material-symbols-outlined text-[28px]" data-icon="security">security</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-primary mb-xs">Keamanan Data Terpusat</h3>
+<p class="font-body-md text-body-md text-primary-fixed-dim">Infrastruktur server pemerintah dengan enkripsi end-to-end, memastikan kerahasiaan dan integritas data proyek nasional.</p>
+</div>
+<div class="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-1/4 translate-y-1/4">
+<span class="material-symbols-outlined text-[200px]" data-icon="shield">shield</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-primary text-on-primary font-body-sm text-body-sm w-full py-xl px-gutter flex flex-col items-center justify-center space-y-md border-t border-primary-container">
+<div class="font-label-md text-label-md font-bold text-on-primary">PUSDAOP</div>
+<div class="flex gap-md">
+<a class="text-surface-variant opacity-80 hover:opacity-100 transition-opacity" href="#">Kebijakan Privasi</a>
+<a class="text-surface-variant opacity-80 hover:opacity-100 transition-opacity" href="#">Syarat &amp; Ketentuan</a>
+<a class="text-surface-variant opacity-80 hover:opacity-100 transition-opacity" href="#">Peta Situs</a>
+<a class="text-surface-variant opacity-80 hover:opacity-100 transition-opacity" href="#">Hubungi Kami</a>
+</div>
+<p class="text-surface-variant opacity-80 mt-lg text-center">© 2024 PUSDAOP - Portal Operasi Dokumen Pemerintah. Seluruh Hak Cipta Dilindungi.</p>
+</footer>
+</body></html>
