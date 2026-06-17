@@ -57,11 +57,7 @@ jobs:
           name: dist
           path: dist
 
-      - name: Deploy to Vercel Preview
-        run: npx vercel --yes --token ${{ secrets.VERCEL_TOKEN }}
-
       - name: Deploy to Vercel Production
-        if: github.event_name == 'workflow_dispatch' && inputs.production == 'true'
         run: npx vercel --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
 
   deploy-cloudflare:
