@@ -22,7 +22,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { uploadToGoogleDrive } from '@/lib/gdrive';
+import { r2Storage, getR2PublicUrl } from '@/integrations/r2/client';
 
 export default function RespondentDokumenAkhir() {
   const navigate = useNavigate();
@@ -62,14 +62,28 @@ export default function RespondentDokumenAkhir() {
       handleInputChange(name, '');
       return;
     }
+    
+    // Check if file is larger than 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(`Ukuran file terlalu besar! Maksimal 2MB. Silakan kompres file Anda terlebih dahulu.`);
+      return;
+    }
+
     setUploadingFields(prev => ({ ...prev, [name]: true }));
     try {
-      const folderName = formData.nama_pelaksana || formData.nama_perusahaan || user?.name || 'Dokumen_Uploads';
-      const link = await uploadToGoogleDrive(file, folderName);
+      // Create a unique path for the file in R2
+      const respondentId = user?.id || 'demo';
+      const timestamp = new Date().getTime();
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const r2Path = `uploads/${respondentId}/${timestamp}_${safeFileName}`;
+      
+      await r2Storage.upload(r2Path, file, file.type);
+      const link = getR2PublicUrl(r2Path);
+      
       handleInputChange(name, link);
-      toast.success(`File ${file.name} berhasil diunggah.`);
+      toast.success(`File ${file.name} berhasil diunggah ke Cloudflare R2.`);
     } catch (err) {
-      toast.error(`Gagal mengunggah file. Pastikan Google Drive terhubung.`);
+      toast.error(`Gagal mengunggah file. Pastikan Cloudflare R2 terhubung.`);
     } finally {
       setUploadingFields(prev => ({ ...prev, [name]: false }));
     }
