@@ -261,11 +261,15 @@ export default function AdminTemplates() {
           const base64data = reader.result as string;
           try {
             await updateTemplate(template.id, base64data);
-            if (selectedTemplate && selectedTemplate.id === template.id) {
-              setSelectedTemplate({ ...selectedTemplate, content: base64data });
-              setEditContent(base64data);
-            }
-            toast.success(`File "${file.name}" berhasil diupload & disimpan.`);
+            
+            // Seamless load: Ensure selected template has latest data and open Native Editor immediately
+            const updatedTemplate = { ...template, content: base64data };
+            setSelectedTemplate(updatedTemplate);
+            setEditContent(base64data);
+            setNativeLoading(true);
+            setShowNativeEditor(true);
+
+            toast.success(`File "${file.name}" berhasil diupload & disiapkan di editor.`);
           } catch (e) {
             toast.error("Gagal menyimpan file.");
           } finally {

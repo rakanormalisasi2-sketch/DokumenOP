@@ -23,6 +23,7 @@ import {
     CellOptionsDialog,
     StylesDialog,
     ImageResizer,
+    BookmarkDialog,
     Inject,
 } from '@syncfusion/ej2-react-documenteditor';
 import { Button } from '@/components/ui/button';
@@ -185,7 +186,7 @@ export default function SyncfusionDocumentEditor({
                         ContextMenu, OptionsPane, HyperlinkDialog, TableOfContentsDialog, PageSetupDialog,
                         StyleDialog, ListDialog, ParagraphDialog, FontDialog,
                         TablePropertiesDialog, BordersAndShadingDialog, TableOptionsDialog, CellOptionsDialog,
-                        StylesDialog, ImageResizer
+                        StylesDialog, ImageResizer, BookmarkDialog
                     ]} />
                 </DocumentEditorContainerComponent>
             </div>
