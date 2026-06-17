@@ -491,14 +491,6 @@ export default function AdminTemplates() {
 
             {showNativeEditor && selectedTemplate?.format === 'docx' ? (
               // NATIVE OOXML EDITOR
-              nativeLoading ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground text-sm">Memuat dokumen...</p>
-                  </div>
-                </div>
-              ) : (
               <div className='flex-1 h-full'>
                 <SyncfusionDocumentEditor
                   initialContent={selectedTemplate?.content}
@@ -513,7 +505,6 @@ export default function AdminTemplates() {
                   fields={fields.map(f => ({ name: f.name, label: f.label }))}
                 />
               </div>
-              )
             ) : showSmartEditor && selectedTemplate?.format === 'docx' ? (
               // SMART EDITOR VIEW
               <SmartDocxEditor
