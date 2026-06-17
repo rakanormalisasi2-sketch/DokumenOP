@@ -32,6 +32,7 @@ export default function RespondentDokumenAwal() {
   const [companyProfile, setCompanyProfile] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
 
   // Filter fields that are designated for "Dokumen Awal"
   const awalFields = fields.filter(f => f.showIn?.includes('awal'));
@@ -40,7 +41,7 @@ export default function RespondentDokumenAwal() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'application/pdf') {
@@ -52,12 +53,25 @@ export default function RespondentDokumenAwal() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCompanyProfile(event.target?.result as string);
+    setIsUploadingProfile(true);
+    try {
+      const respondentId = user?.id || 'demo';
+      const timestamp = new Date().getTime();
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const r2Path = `uploads/${respondentId}/company_profile_${timestamp}_${safeFileName}`;
+      
+      const { r2Storage, getR2PublicUrl } = await import('@/integrations/r2/client');
+      await r2Storage.upload(r2Path, file, file.type);
+      const link = getR2PublicUrl(r2Path);
+      
+      setCompanyProfile(link);
       setFileName(file.name);
-    };
-    reader.readAsDataURL(file);
+      toast.success('Company Profile berhasil diunggah ke Cloudflare R2');
+    } catch (err) {
+      toast.error('Gagal mengunggah Company Profile. Pastikan Cloudflare R2 terhubung.');
+    } finally {
+      setIsUploadingProfile(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -194,9 +208,16 @@ export default function RespondentDokumenAwal() {
                 </Label>
                 <div
                   className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center transition-colors ${companyProfile ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
-                    }`}
+                    } ${isUploadingProfile ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {companyProfile ? (
+                  {isUploadingProfile ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center animate-pulse">
+                        <UploadCloud className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <p className="font-semibold text-blue-500 animate-pulse">Mengunggah ke Cloudflare R2...</p>
+                    </div>
+                  ) : companyProfile ? (
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                         <FileCheck2 className="w-6 h-6 text-primary" />
@@ -216,7 +237,7 @@ export default function RespondentDokumenAwal() {
                       <p className="font-medium">Drag & drop file PDF di sini</p>
                       <p className="text-sm text-muted-foreground mb-4">Ukuran maksimal 5MB</p>
                       <label htmlFor="companyProfileUpload">
-                        <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('companyProfileUpload')?.click()}>
+                        <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('companyProfileUpload')?.click()} disabled={isUploadingProfile}>
                           Pilih File PDF
                         </Button>
                       </label>
