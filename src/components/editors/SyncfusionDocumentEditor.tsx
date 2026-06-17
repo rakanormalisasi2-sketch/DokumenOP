@@ -131,7 +131,7 @@ export default function SyncfusionDocumentEditor({
 
     return (
         <div className="flex flex-col h-full w-full bg-white relative">
-            <div className="flex items-center justify-between p-2 border-b bg-gray-50 shrink-0">
+            <div className="flex items-center justify-between p-2 pr-10 border-b bg-gray-50 shrink-0">
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={onClose}>
                         Kembali

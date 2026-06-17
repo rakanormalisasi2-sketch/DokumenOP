@@ -156,12 +156,6 @@ export default function AdminTemplates() {
     setShowSmartEditor(false);
     setSmartEditorFile(null);
     setShowNativeEditor(false);
-
-    // Open native editor — initialUrl now handles data: URLs directly via base64 decode in NativeDocxEditor
-    if (template.format === 'docx') {
-      setNativeLoading(true);
-      setShowNativeEditor(true);
-    }
   };
 
 
