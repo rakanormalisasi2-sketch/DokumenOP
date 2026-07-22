@@ -273,22 +273,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateTemplate = useCallback(async (id: string, content: string) => {
-    let format: DocumentTemplate['format'] | null = null;
+    // Find format synchronously
+    const template = templates.find((t) => t.id === id);
+    if (!template) {
+      throw new Error('Template tidak ditemukan');
+    }
+    const format = template.format;
 
     setTemplates((prev) =>
       prev.map((t) => {
         if (t.id !== id) return t;
-        format = t.format;
         return { ...t, content, lastUpdated: new Date() };
       })
     );
 
-    if (!format) {
-      throw new Error('Template tidak ditemukan');
-    }
-
     await templateStorage.saveTemplateContent({ templateId: id, format, content });
-  }, []);
+  }, [templates]);
 
   const updateTemplateMeta = useCallback((id: string, updates: Partial<DocumentTemplate>) => {
     setTemplates((prev) =>

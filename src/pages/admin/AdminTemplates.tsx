@@ -229,14 +229,14 @@ export default function AdminTemplates() {
     const fileName = file.name.toLowerCase();
     const ext = getFileExtension(fileName);
 
-    const docTypes = ['docx']; // Only allow DOCX for Smart Form
+    const docTypes = ['docx', 'doc']; // Allow DOCX and DOC for Smart Form
     const sheetTypes = ['xlsx', 'xls', 'xlm', 'xlsm', 'csv', 'ods'];
 
     const isDocType = docTypes.includes(ext);
     const isSheetType = sheetTypes.includes(ext);
 
     if (template.format === 'docx' && !isDocType) {
-      toast.error('Gunakan file .DOCX (Microsoft Word)');
+      toast.error('Gunakan file .DOCX atau .DOC (Microsoft Word)');
       return;
     }
 
@@ -398,7 +398,7 @@ export default function AdminTemplates() {
           ref={fileInputRef}
           type="file"
           className="hidden"
-          accept=".docx,.xlsx,.xls,.csv"
+          accept=".docx,.doc,.xlsx,.xls,.csv"
           onChange={handleFileUpload}
         />
 
@@ -580,23 +580,6 @@ export default function AdminTemplates() {
                           </Button>
                         </div>
                       </div>
-
-                      {/* MINI PREVIEW */}
-                      {selectedTemplate.content && (
-                        <div className="mt-4 border-t pt-4">
-                          <p className="text-sm font-semibold mb-2">Preview Isi File:</p>
-                          <div className="aspect-[210/297] w-full border rounded-lg bg-gray-100 overflow-hidden relative">
-                            <div className="absolute inset-0 overflow-auto scale-75 origin-top">
-                              <DocumentPreview
-                                title="Preview Mini"
-                                content={selectedTemplate.content}
-                                format="docx"
-                                fields={fields}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ) : selectedTemplate?.format === 'xlsx' ? (
                     <LuckysheetEditor
