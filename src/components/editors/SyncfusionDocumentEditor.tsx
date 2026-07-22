@@ -71,8 +71,11 @@ export default function SyncfusionDocumentEditor({
             mergeFields.push({ ...f, name: `${f.name}_standar`, label: `${f.label} (Standar)` });
             mergeFields.push({ ...f, name: `${f.name}_lengkap`, label: `${f.label} (Lengkap)` });
             mergeFields.push({ ...f, name: `${f.name}_hari`, label: `${f.label} (Hari)` });
-            mergeFields.push({ ...f, name: `${f.name}_plus_90_standar`, label: `${f.label} + 90 Hari (Standar)` });
-            mergeFields.push({ ...f, name: `${f.name}_plus_90_lengkap`, label: `${f.label} + 90 Hari (Lengkap)` });
+        }
+        if (f.type === 'date_addition') {
+            mergeFields.push({ ...f, name: `${f.name}_standar`, label: `${f.label} (Standar)` });
+            mergeFields.push({ ...f, name: `${f.name}_lengkap`, label: `${f.label} (Lengkap)` });
+            mergeFields.push({ ...f, name: `${f.name}_hari`, label: `${f.label} (Hari)` });
         }
     });
 

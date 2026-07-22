@@ -52,7 +52,7 @@ export interface FormField {
   id: string;
   name: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'textarea' | 'select' | 'terbilang' | 'file';
+  type: 'text' | 'number' | 'date' | 'date_addition' | 'textarea' | 'select' | 'terbilang' | 'file';
   placeholder?: string;
   options?: string[];
   required: boolean;
@@ -62,9 +62,10 @@ export interface FormField {
   phase: 'persiapan' | 'pelaksanaan';
   showIn: ('awal' | 'akhir')[]; // Untuk pelaksanaan
   showInAdmin?: ('kak' | 'kontrak' | 'nota')[]; // Untuk persiapan (dokumen kontrak admin)
-  // Khusus untuk type 'terbilang'
+  // Khusus untuk type 'terbilang' & 'date_addition'
   linkedFieldId?: string; // Menyimpan ID field yang dirujuk
   terbilangFormat?: 'angka' | 'rupiah'; // Format ejaan terbilang
+  dateAdditionDays?: number; // Jumlah hari yang ditambahkan
 }
 
 export interface WorkforceRequirement {

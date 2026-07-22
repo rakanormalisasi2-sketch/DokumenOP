@@ -76,6 +76,7 @@ export default function AdminFields() {
     showInAdmin: ['kak', 'kontrak', 'nota'] as ('kak' | 'kontrak' | 'nota')[],
     linkedFieldId: '',
     terbilangFormat: 'angka' as 'angka' | 'rupiah',
+    dateAdditionDays: 0,
   });
 
   const resetForm = () => {
@@ -92,6 +93,7 @@ export default function AdminFields() {
       showInAdmin: ['kak', 'kontrak', 'nota'],
       linkedFieldId: '',
       terbilangFormat: 'angka',
+      dateAdditionDays: 0,
     });
     setEditingField(null);
   };
@@ -116,6 +118,7 @@ export default function AdminFields() {
       showInAdmin: field.showInAdmin || ['kak', 'kontrak', 'nota'],
       linkedFieldId: field.linkedFieldId || '',
       terbilangFormat: field.terbilangFormat || 'angka',
+      dateAdditionDays: field.dateAdditionDays || 0,
     });
     setShowDialog(true);
   };
@@ -446,6 +449,7 @@ export default function AdminFields() {
                     <SelectItem value="text">Teks</SelectItem>
                     <SelectItem value="number">Angka</SelectItem>
                     <SelectItem value="date">Tanggal</SelectItem>
+                    <SelectItem value="date_addition">Penambahan Tanggal (Otomatis)</SelectItem>
                     <SelectItem value="textarea">Teks Panjang</SelectItem>
                     <SelectItem value="select">Pilihan</SelectItem>
                     <SelectItem value="terbilang">Terbilang (Teks Ejaan Angka)</SelectItem>
@@ -453,6 +457,39 @@ export default function AdminFields() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {formData.type === 'date_addition' && (
+                <div className="space-y-4 p-4 bg-muted/30 border rounded-lg mt-4">
+                  <div className="space-y-2">
+                    <Label>Pilih Field Sumber (Tanggal)</Label>
+                    <Select
+                      value={formData.linkedFieldId}
+                      onValueChange={(val) => setFormData({ ...formData, linkedFieldId: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Field Tanggal..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fields.filter(f => f.type === 'date').map(f => (
+                          <SelectItem key={f.id} value={f.name}>{f.label} ({f.name})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Field ini akan menjadi patokan tanggal awalnya</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Jumlah Hari Penambahan</Label>
+                    <Input
+                      type="number"
+                      placeholder="contoh: 90"
+                      value={formData.dateAdditionDays || ''}
+                      onChange={(e) => setFormData({ ...formData, dateAdditionDays: parseInt(e.target.value) || 0 })}
+                    />
+                    <p className="text-xs text-muted-foreground">Isi berapa hari yang akan ditambahkan ke field sumber</p>
+                  </div>
+                </div>
+              )}
 
               {formData.type === 'terbilang' && (
                 <div className="space-y-4 p-4 bg-muted/30 border rounded-lg mt-4">
