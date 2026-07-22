@@ -150,12 +150,45 @@ const sampleSubmissions: Submission[] = [
   },
 ];
 
+const safeLocalStorageGet = <T,>(key: string, defaultVal: T): T => {
+  if (typeof window === 'undefined') return defaultVal;
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.error(`Error parsing ${key} from localStorage`, e);
+  }
+  return defaultVal;
+};
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [fields, setFields] = useState<FormField[]>(initialFields);
-  const [submissions, setSubmissions] = useState<Submission[]>(sampleSubmissions);
-  const [templates, setTemplates] = useState<DocumentTemplate[]>(defaultTemplates);
-  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
-  const [contractDrafts, setContractDrafts] = useState<ContractDraft[]>([]);
+  const [fields, setFields] = useState<FormField[]>(() => safeLocalStorageGet('pusdaop_fields', initialFields));
+  const [submissions, setSubmissions] = useState<Submission[]>(() => safeLocalStorageGet('pusdaop_submissions', sampleSubmissions));
+  const [templates, setTemplates] = useState<DocumentTemplate[]>(() => safeLocalStorageGet('pusdaop_templates', defaultTemplates));
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>(() => safeLocalStorageGet('pusdaop_accessRequests', []));
+  const [contractDrafts, setContractDrafts] = useState<ContractDraft[]>(() => safeLocalStorageGet('pusdaop_contractDrafts', []));
+
+  useEffect(() => {
+    localStorage.setItem('pusdaop_fields', JSON.stringify(fields));
+  }, [fields]);
+
+  useEffect(() => {
+    localStorage.setItem('pusdaop_submissions', JSON.stringify(submissions));
+  }, [submissions]);
+
+  useEffect(() => {
+    // Only save metadata for templates to avoid quota limits
+    const templatesMeta = templates.map(({ content, ...rest }) => ({ ...rest, content: '' }));
+    localStorage.setItem('pusdaop_templates', JSON.stringify(templatesMeta));
+  }, [templates]);
+
+  useEffect(() => {
+    localStorage.setItem('pusdaop_accessRequests', JSON.stringify(accessRequests));
+  }, [accessRequests]);
+
+  useEffect(() => {
+    localStorage.setItem('pusdaop_contractDrafts', JSON.stringify(contractDrafts));
+  }, [contractDrafts]);
 
   // Hydrate template contents from Cloud Storage so it works across tabs/devices.
   useEffect(() => {
@@ -186,7 +219,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         // Skip R2 loading if not configured (graceful fallback for fresh deployment)
         if (r2Storage.isConfigured()) {
-          const loaded = await templateStorage.loadAllTemplateContents(defaultTemplates);
+          const loaded = await templateStorage.loadAllTemplateContents(templates);
           if (cancelled) return;
           setTemplates((prev) =>
             prev.map((t) => {
