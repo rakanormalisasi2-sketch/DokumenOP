@@ -6,6 +6,7 @@ import { Printer, Download, X, Edit3, AlertTriangle, Loader2 } from 'lucide-reac
 import { renderAsync } from 'docx-preview';
 import { base64ToArrayBuffer, performMailMerge } from '@/lib/docxUtils';
 import { formatTerbilang } from '@/lib/terbilang';
+import { enrichSubmissionData } from '@/lib/enrichData';
 import { toast } from 'sonner';
 
 interface DocumentPreviewProps {
@@ -104,19 +105,24 @@ export default function DocumentPreview({
     let processedContent = content;
 
     if (submission) {
-      // Pre-calculate terbilang fields
-      const enrichedData = { ...submission.data };
-      fields.forEach(f => {
-        if (f.type === 'terbilang' && f.linkedFieldId) {
-          enrichedData[f.name] = formatTerbilang(enrichedData[f.linkedFieldId] || '', f.terbilangFormat);
+      // Use the new enrichment utility
+      const enrichedData = enrichSubmissionData(submission.data, fields);
+
+      // Replace placeholders with enriched submission data
+      // First pass: replace all available enriched keys
+      Object.keys(enrichedData).forEach(key => {
+        const placeholder = new RegExp(`{{${key}}}`, 'g');
+        const value = enrichedData[key];
+        // Only replace if value is defined and not null
+        if (value !== undefined && value !== null) {
+            processedContent = processedContent.replace(placeholder, value);
         }
       });
 
-      // Replace placeholders with submission data
+      // Second pass: fill missing original fields with [Label]
       fields.forEach(field => {
         const placeholder = new RegExp(`{{${field.name}}}`, 'g');
-        const value = enrichedData[field.name] || `[${field.label}]`;
-        processedContent = processedContent.replace(placeholder, value);
+        processedContent = processedContent.replace(placeholder, `[${field.label}]`);
       });
     }
 
@@ -128,13 +134,9 @@ export default function DocumentPreview({
       const cells = JSON.parse(content);
       if (!Array.isArray(cells)) return null;
 
-      const enrichedData = submission ? { ...submission.data } : {};
+      let enrichedData = submission ? { ...submission.data } : {};
       if (submission) {
-        fields.forEach(f => {
-          if (f.type === 'terbilang' && f.linkedFieldId) {
-            enrichedData[f.name] = formatTerbilang(enrichedData[f.linkedFieldId] || '', f.terbilangFormat);
-          }
-        });
+        enrichedData = enrichSubmissionData(submission.data, fields);
       }
 
       // Replace placeholders in cells

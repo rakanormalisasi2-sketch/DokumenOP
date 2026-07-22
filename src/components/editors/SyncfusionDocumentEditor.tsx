@@ -63,7 +63,18 @@ export default function SyncfusionDocumentEditor({
     const serviceUrl = 'https://document.syncfusion.com/web-services/docx-editor/api/documenteditor/';
 
     // Filter out file types because files cannot be mailmerged
-    const mergeFields = fields.filter(f => f.type !== 'file');
+    const baseMergeFields = fields.filter(f => f.type !== 'file');
+    const mergeFields: typeof fields = [];
+    baseMergeFields.forEach(f => {
+        mergeFields.push(f);
+        if (f.type === 'date') {
+            mergeFields.push({ ...f, name: `${f.name}_standar`, label: `${f.label} (Standar)` });
+            mergeFields.push({ ...f, name: `${f.name}_lengkap`, label: `${f.label} (Lengkap)` });
+            mergeFields.push({ ...f, name: `${f.name}_hari`, label: `${f.label} (Hari)` });
+            mergeFields.push({ ...f, name: `${f.name}_plus_90_standar`, label: `${f.label} + 90 Hari (Standar)` });
+            mergeFields.push({ ...f, name: `${f.name}_plus_90_lengkap`, label: `${f.label} + 90 Hari (Lengkap)` });
+        }
+    });
 
     useEffect(() => {
         if (containerRef.current && initialContent) {

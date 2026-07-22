@@ -16,6 +16,7 @@ import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { formatTerbilang } from '@/lib/terbilang';
+import { enrichSubmissionData } from '@/lib/enrichData';
 import { useData } from '@/contexts/DataContext';
 
 interface MassDocumentGeneratorProps {
@@ -186,17 +187,16 @@ export default function MassDocumentGenerator({
                 const item = { ...draftsData[i] };
                 let htmlContent = template.content;
 
-                // Pre-calculate terbilang fields
-                fields.forEach(f => {
-                    if (f.type === 'terbilang' && f.linkedFieldId) {
-                        item[f.name] = formatTerbilang(item[f.linkedFieldId] || '', f.terbilangFormat);
-                    }
-                });
+                // Enrich data (terbilang, date formatting, +90 days, etc)
+                const enrichedItem = enrichSubmissionData(item, fields);
 
                 // Replace placeholders in HTML {{key}} -> value
-                Object.keys(item).forEach(key => {
+                Object.keys(enrichedItem).forEach(key => {
                     const regex = new RegExp(`{{${key}}}`, 'g');
-                    htmlContent = htmlContent.replace(regex, item[key] || '');
+                    const value = enrichedItem[key];
+                    if (value !== undefined && value !== null) {
+                        htmlContent = htmlContent.replace(regex, value);
+                    }
                 });
 
                 // Also clean up any undefined placeholders
