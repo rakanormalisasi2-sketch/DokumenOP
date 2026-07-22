@@ -58,7 +58,7 @@ export default function SyncfusionEditor({
 
     // Default service URL for demo purposes. 
     // In production, you should host your own service.
-    const hostUrl = 'https://ej2services.syncfusion.com/production/web-services/';
+    const hostUrl = 'https://document.syncfusion.com/web-services/docx-editor/';
     const serviceUrl = hostUrl + 'api/documenteditor/';
 
     useEffect(() => {

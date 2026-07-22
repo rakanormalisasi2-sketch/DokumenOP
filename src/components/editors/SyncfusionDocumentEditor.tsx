@@ -60,7 +60,7 @@ export default function SyncfusionDocumentEditor({
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    const serviceUrl = 'https://services.syncfusion.com/react/production/api/documenteditor/';
+    const serviceUrl = 'https://document.syncfusion.com/web-services/docx-editor/api/documenteditor/';
 
     // Filter out file types because files cannot be mailmerged
     const mergeFields = fields.filter(f => f.type !== 'file');
