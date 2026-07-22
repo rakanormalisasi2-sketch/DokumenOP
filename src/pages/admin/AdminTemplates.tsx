@@ -264,8 +264,9 @@ export default function AdminTemplates() {
             setShowNativeEditor(true);
 
             toast.success(`File "${file.name}" berhasil diupload & disiapkan di editor.`);
-          } catch (e) {
-            toast.error("Gagal menyimpan file.");
+          } catch (e: any) {
+            console.error("Upload error:", e);
+            toast.error(`Gagal menyimpan file: ${e?.message || String(e)}`);
           } finally {
             setIsConverting(false);
           }
