@@ -8,62 +8,87 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Info, Key, LogIn, Eye, EyeOff, Building2, Mail, CheckCircle2 } from 'lucide-react';
+import { Info, LogIn, Eye, EyeOff, Building2, Mail, CheckCircle2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Login() {
-  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Request code dialog state
+  // Request access dialog state
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [requestEmail, setRequestEmail] = useState('');
   const [requestName, setRequestName] = useState('');
   const [isRequesting, setIsRequesting] = useState(false);
   const [requestSuccess, setRequestSuccess] = useState(false);
 
+  const isLocked = lockedUntil !== null && Date.now() < lockedUntil;
+  const lockSecondsLeft = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 1000) : 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (isLocked) {
+      setError(`Terlalu banyak percobaan. Coba lagi dalam ${lockSecondsLeft} detik.`);
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const { error: loginError } = await login(email.trim(), password);
 
-    const success = login(code.trim());
-    
-    if (success) {
-      if (code.trim() === 'bidangop') {
+    if (loginError) {
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        setLockedUntil(Date.now() + 30000); // Lock 30 seconds
+        setError('Terlalu banyak percobaan gagal. Silakan tunggu 30 detik.');
+        setLoginAttempts(0);
+      } else {
+        setError(`Email atau password salah. (${newAttempts}/5 percobaan)`);
+      }
+    } else {
+      setLoginAttempts(0);
+      // Navigation handled by onAuthStateChange in AuthContext + ProtectedRoute
+      const { data: { session } } = await supabase.auth.getSession();
+      const role = session?.user?.user_metadata?.role;
+      if (role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/respondent');
       }
-    } else {
-      setError('Kode akses tidak valid. Silakan coba lagi.');
     }
-    
+
     setIsLoading(false);
   };
 
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!requestEmail || !requestName) {
       toast.error('Mohon lengkapi semua field');
       return;
     }
-
     setIsRequesting(true);
-
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await supabase.from('access_requests').insert({
+        id: crypto.randomUUID(),
+        name: requestName,
+        email: requestEmail,
+        status: 'pending',
+        request_date: new Date().toISOString(),
+      });
       setRequestSuccess(true);
-      toast.success('Permintaan kode akses berhasil dikirim!');
-    } catch (error) {
+      toast.success('Permintaan akses berhasil dikirim!');
+    } catch {
       toast.error('Gagal mengirim permintaan. Silakan coba lagi.');
     } finally {
       setIsRequesting(false);
@@ -82,7 +107,7 @@ export default function Login() {
       {/* Decorative Background */}
       <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none opacity-20">
         <div className="absolute top-[-10%] left-[-10%] w-1/2 h-1/2 bg-secondary-container rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-1/2 h-1/2 bg-primary-container rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-1/2 h-1/2 bg-primary-container rounded-full blur-[120px]"></div>
       </div>
 
       {/* Login Card Container */}
@@ -102,24 +127,44 @@ export default function Login() {
           <div className="mb-6 p-3 bg-surface-container rounded-lg border border-outline-variant flex items-start space-x-2">
             <Info className="text-on-surface-variant mt-0.5 w-5 h-5 shrink-0" />
             <p className="font-body-sm text-body-sm text-on-surface-variant leading-snug">
-              Akses sistem terbatas. Silakan masukkan kode akses resmi yang telah diberikan oleh Administrator.
+              Masukkan email dan password resmi yang diberikan oleh Administrator.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Single Input: Kode Akses */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Input */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-1" htmlFor="accessCode">Kode Akses</label>
+              <label className="block font-label-md text-label-md text-on-surface mb-1" htmlFor="loginEmail">Email</label>
               <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-outline" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-outline" />
                 <input
-                  id="accessCode"
-                  name="accessCode"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Masukkan kode unik Anda"
+                  id="loginEmail"
+                  name="email"
+                  type="email"
+                  placeholder="email@instansi.go.id"
                   required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-DEFAULT focus:ring-2 focus:ring-secondary focus:border-secondary font-body-md text-body-md text-on-surface placeholder:text-outline transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="block font-label-md text-label-md text-on-surface mb-1" htmlFor="loginPassword">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-outline" />
+                <input
+                  id="loginPassword"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Masukkan password Anda"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-2 bg-surface border border-outline-variant rounded-DEFAULT focus:ring-2 focus:ring-secondary focus:border-secondary font-body-md text-body-md text-on-surface placeholder:text-outline transition-all"
                 />
                 <button
@@ -139,19 +184,19 @@ export default function Login() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={!code.trim() || isLoading}
-              className="w-full py-2 bg-secondary hover:bg-secondary/90 disabled:opacity-50 text-on-secondary font-label-md text-label-md rounded-DEFAULT transition-colors flex items-center justify-center space-x-2 shadow-sm"
+              disabled={!email.trim() || !password || isLoading || isLocked}
+              className="w-full py-2 bg-secondary hover:bg-secondary/90 disabled:opacity-50 text-on-secondary font-label-md text-label-md rounded-DEFAULT transition-colors flex items-center justify-center space-x-2 shadow-sm mt-2"
             >
-              <span>{isLoading ? 'Memverifikasi...' : 'Masuk'}</span>
-              {!isLoading && <LogIn className="w-5 h-5" />}
+              <span>{isLoading ? 'Memverifikasi...' : isLocked ? `Tunggu ${lockSecondsLeft}s...` : 'Masuk'}</span>
+              {!isLoading && !isLocked && <LogIn className="w-5 h-5" />}
             </button>
           </form>
 
           {/* Footer Link */}
           <div className="mt-6 pt-6 border-t border-outline-variant text-center">
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Belum punya kode akses? <br className="md:hidden"/>
-              <button 
+              Belum punya akses? <br className="md:hidden"/>
+              <button
                 onClick={() => setShowRequestDialog(true)}
                 className="font-label-md text-secondary hover:text-secondary-fixed-dim underline transition-colors focus:outline-none ml-1"
               >
@@ -168,7 +213,7 @@ export default function Login() {
           <DialogHeader>
             <DialogTitle className="font-title-lg text-title-lg text-primary">Permohonan Akses</DialogTitle>
             <DialogDescription className="font-body-sm text-body-sm text-on-surface-variant">
-              Silakan lengkapi data di bawah ini. Administrator akan meninjau dan mengirimkan kode akses ke email Anda jika disetujui.
+              Silakan lengkapi data di bawah ini. Administrator akan meninjau dan memberikan akses ke email Anda jika disetujui.
             </DialogDescription>
           </DialogHeader>
 
@@ -179,9 +224,9 @@ export default function Login() {
               </div>
               <h3 className="font-title-lg text-primary mb-2">Permintaan Terkirim!</h3>
               <p className="text-on-surface-variant font-body-sm mb-6">
-                Permintaan kode akses Anda sudah dikirim ke admin. Anda akan menerima kode akses melalui email setelah disetujui.
+                Permintaan akses Anda sudah diterima. Admin akan membuat akun dan menghubungi Anda.
               </p>
-              <button 
+              <button
                 onClick={resetRequestDialog}
                 className="w-full py-2 bg-primary hover:bg-primary/90 text-on-primary font-label-md rounded-DEFAULT transition-colors"
               >
@@ -215,15 +260,15 @@ export default function Login() {
                 />
               </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={resetRequestDialog}
                   className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface font-label-md rounded-DEFAULT transition-colors"
                 >
                   Batal
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isRequesting}
                   className="px-4 py-2 bg-primary hover:bg-primary/90 text-on-primary font-label-md rounded-DEFAULT transition-colors shadow-sm disabled:opacity-50"
                 >

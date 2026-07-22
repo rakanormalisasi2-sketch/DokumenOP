@@ -8,6 +8,7 @@ import { base64ToArrayBuffer, performMailMerge } from '@/lib/docxUtils';
 import { formatTerbilang } from '@/lib/terbilang';
 import { enrichSubmissionData } from '@/lib/enrichData';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 
 interface DocumentPreviewProps {
   content: string;
@@ -200,7 +201,7 @@ export default function DocumentPreview({
           printWin.document.write(`
                     <html>
                         <head><title>${title}</title></head>
-                        <body>${contentHtml}</body>
+                        <body>${DOMPurify.sanitize(contentHtml)}</body>
                     </html>
                  `);
           printWin.document.close();
@@ -238,7 +239,7 @@ export default function DocumentPreview({
             </style>
           </head>
           <body>
-            ${contentHtml}
+            ${DOMPurify.sanitize(contentHtml)}
           </body>
         </html>
       `);
@@ -299,7 +300,7 @@ export default function DocumentPreview({
             <p style="text-align: center; color: #666; font-size: 12px; margin-bottom: 20px;">
               Gunakan "Save as PDF" atau "Microsoft Print to PDF" pada dialog print
             </p>
-            ${contentHtml}
+            ${DOMPurify.sanitize(contentHtml)}
           </body>
         </html>
       `);
@@ -414,7 +415,7 @@ export default function DocumentPreview({
               ) : (
                 <div
                   className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: renderContent() }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderContent()) }}
                 />
               )}
             </div>

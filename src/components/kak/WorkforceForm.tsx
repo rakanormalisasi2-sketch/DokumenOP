@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,8 +62,14 @@ export default function WorkforceForm({ requirements, onChange }: WorkforceFormP
   };
 
   // Group by position type
-  const tenagaAhli = requirements.filter(r => r.position === 'team_leader');
-  const tenagaPendukung = requirements.filter(r => r.position !== 'team_leader');
+  const tenagaAhli = useMemo(
+    () => requirements.filter(r => r.position === 'team_leader'),
+    [requirements]
+  );
+  const tenagaPendukung = useMemo(
+    () => requirements.filter(r => r.position !== 'team_leader'),
+    [requirements]
+  );
 
   return (
     <Card>

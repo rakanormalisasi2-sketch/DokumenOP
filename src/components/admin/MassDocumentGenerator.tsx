@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { formatTerbilang } from '@/lib/terbilang';
 import { enrichSubmissionData } from '@/lib/enrichData';
 import { useData } from '@/contexts/DataContext';
+import DOMPurify from 'dompurify';
 
 interface MassDocumentGeneratorProps {
     title: string;
@@ -41,9 +42,9 @@ export default function MassDocumentGenerator({
     const [manualData, setManualData] = useState<Record<string, string>>({});
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('none');
 
-    // selectedRows now stores draft IDs instead of indices
     const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [genProgress, setGenProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Filter fields to show as columns/inputs. 
@@ -148,75 +149,54 @@ export default function MassDocumentGenerator({
         if (!template) return;
 
         setIsGenerating(true);
+        setGenProgress(0);
 
         try {
-            // In a real app, we might want to fetch the blob from a URL if content is a URL
-            // But here 'content' is likely HTML string for TinyMCE. 
-            // WAIT - specific requirement: "Template menyesuaikan field yang ada".
-            // If the template is from the Editor (HTML), we need to handle HTML to DOCX?
-            // OR are we using 'docxtemplater' with a .docx binary template?
-            // The Task says: "Integrate docxtemplater for contract generation".
-            // This implies we need a valid .docx template file (binary).
-            // Currently our `DocumentTemplate` type has `content: string` (HTML).
-            // IF we don't have binary .docx templates stored, we can't use docxtemplater effectively for high fidelity.
-            // HOWEVER, the user asked for "Smart Form Strategy" using uploading .docx.
-            // For now, assuming we use `html-to-docx` OR we accept the limitation that we need .docx files.
-
-            // CRITICAL CHECK: Does the system store .docx binaries?
-            // Reviewing `types`: DocumentTemplate has `content: string`.
-            // Reviewing `contractFormats`: It just has labels.
-            // Strategy: Since we haven't implemented "Upload .docx template" yet (Task #7),
-            // We should use `html-to-docx` for now to generate from the HTML content stored in `templates`.
-            // OR generate a basic .docx with replaced placeholders if the template is simple.
-
-            // Refinement: `docxtemplater` requires a .docx binary. `html-to-docx` converts HTML to .docx.
-            // Given the current state, `html-to-docx` is the viable path for the HTML content we have.
-
-            // BUT `docxtemplater` was explicitly requested. 
-            // Let's fallback to `html-to-docx` logic for now because we don't have .docx files.
-            // We will do a robust variable replacement on the HTML string, then convert.
-
-            // Dynamic import to avoid SSR issues if any (standard React pattern)
             const { default: HTMLtoDOCX } = await import('html-to-docx');
-
             const JSZip = (await import('jszip')).default;
             const zip = new JSZip();
             let generatedCount = 0;
+            const BATCH_SIZE = 3; // Process 3 docs at a time to keep UI responsive
 
-            for (let i = 0; i < draftsData.length; i++) {
-                const item = { ...draftsData[i] };
-                let htmlContent = template.content;
+            for (let i = 0; i < draftsData.length; i += BATCH_SIZE) {
+                const batch = draftsData.slice(i, i + BATCH_SIZE);
 
-                // Enrich data (terbilang, date formatting, +90 days, etc)
-                const enrichedItem = enrichSubmissionData(item, fields);
+                await Promise.all(batch.map(async (item, batchIdx) => {
+                    const globalIdx = i + batchIdx;
+                    let htmlContent = template.content;
 
-                // Replace placeholders in HTML {{key}} -> value
-                Object.keys(enrichedItem).forEach(key => {
-                    const regex = new RegExp(`{{${key}}}`, 'g');
-                    const value = enrichedItem[key];
-                    if (value !== undefined && value !== null) {
-                        htmlContent = htmlContent.replace(regex, value);
+                    // Enrich data (terbilang, date formatting, +90 days, etc)
+                    const enrichedItem = enrichSubmissionData(item, fields);
+
+                    // Replace placeholders in HTML {{key}} -> value
+                    Object.keys(enrichedItem).forEach(key => {
+                        const regex = new RegExp(`{{${key}}}`, 'g');
+                        const value = enrichedItem[key];
+                        if (value !== undefined && value !== null) {
+                            htmlContent = htmlContent.replace(regex, DOMPurify.sanitize(String(value)));
+                        }
+                    });
+
+                    const fileBuffer = await HTMLtoDOCX(htmlContent, null, {
+                        table: { row: { cantSplit: true } },
+                        footer: true,
+                        pageNumber: true,
+                    });
+
+                    const validFileName = (item['nama_pekerjaan'] || item['nomor_kontrak'] || `Dokumen_${globalIdx + 1}`).replace(/[^a-z0-9]/gi, '_');
+                    const fileName = `${validFileName}.docx`;
+
+                    if (isMass) {
+                        zip.file(fileName, fileBuffer);
+                    } else {
+                        saveAs(fileBuffer, fileName);
                     }
-                });
+                    generatedCount++;
+                }));
 
-                // Also clean up any undefined placeholders
-                // htmlContent = htmlContent.replace(/{{.*?}}/g, '......'); 
-
-                const fileBuffer = await HTMLtoDOCX(htmlContent, null, {
-                    table: { row: { cantSplit: true } },
-                    footer: true,
-                    pageNumber: true,
-                });
-
-                const validFileName = (item['nama_pekerjaan'] || item['nomor_kontrak'] || `Dokumen_${i + 1}`).replace(/[^a-z0-9]/gi, '_');
-                const fileName = `${validFileName}.docx`;
-
-                if (isMass) {
-                    zip.file(fileName, fileBuffer);
-                } else {
-                    saveAs(fileBuffer, fileName);
-                }
-                generatedCount++;
+                // Update progress and yield to UI thread between batches
+                setGenProgress(Math.round(((i + BATCH_SIZE) / draftsData.length) * 100));
+                await new Promise(r => setTimeout(r, 0));
             }
 
             if (isMass && generatedCount > 0) {
@@ -231,6 +211,7 @@ export default function MassDocumentGenerator({
             toast.error("Gagal membuat dokumen: " + (error as Error).message);
         } finally {
             setIsGenerating(false);
+            setGenProgress(0);
         }
     };
 

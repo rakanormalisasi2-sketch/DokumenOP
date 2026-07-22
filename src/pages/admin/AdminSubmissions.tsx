@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -79,6 +79,7 @@ import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 
 export default function AdminSubmissions() {
   const navigate = useNavigate();
@@ -114,16 +115,18 @@ export default function AdminSubmissions() {
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [previewDocType, setPreviewDocType] = useState<DocumentType>('baphp_fisik');
 
-  const filteredSubmissions = submissions.filter((s) => {
-    const matchesSearch =
-      s.respondentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.data.nama_pekerjaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.data.nomor_kontrak?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredSubmissions = useMemo(() => {
+    return submissions.filter((s) => {
+      const matchesSearch =
+        s.respondentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.data.nama_pekerjaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.data.nomor_kontrak?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [submissions, searchQuery, statusFilter]);
 
   const handleApprove = (submission: Submission) => {
     setSelectedSubmission(submission);
@@ -257,7 +260,7 @@ export default function AdminSubmissions() {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Cetak Dokumen - ${selectedSubmission.data.nama_pekerjaan}</title>
+            <title>Cetak Dokumen - ${DOMPurify.sanitize(selectedSubmission.data.nama_pekerjaan || '')}</title>
             <style>
               body { 
                 font-family: Arial, sans-serif; 
@@ -286,7 +289,7 @@ export default function AdminSubmissions() {
             </style>
           </head>
           <body>
-            ${printContent}
+            ${DOMPurify.sanitize(printContent)}
           </body>
         </html>
       `);

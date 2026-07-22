@@ -15,6 +15,7 @@ import {
   Check
 } from 'lucide-react';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 import {
   Popover,
   PopoverContent,
@@ -156,7 +157,7 @@ export default function DocumentAnnotator({
     setAnnotations([]);
     // Reset editor content
     if (editorRef.current) {
-      editorRef.current.innerHTML = renderContent();
+      editorRef.current.innerHTML = DOMPurify.sanitize(renderContent());
     }
     toast.info('Semua anotasi dihapus');
   };
@@ -174,7 +175,7 @@ export default function DocumentAnnotator({
       reportedByName: submission.respondentName,
       annotations,
       comment: comment.trim(),
-      screenshotPdf: editorRef.current?.innerHTML, // Store annotated HTML
+      screenshotPdf: editorRef.current?.innerHTML ? DOMPurify.sanitize(editorRef.current.innerHTML) : undefined, // Store annotated HTML
     };
 
     onSubmitReport(report);
@@ -295,7 +296,7 @@ export default function DocumentAnnotator({
           <div 
             ref={editorRef}
             className="bg-white shadow-lg mx-auto max-w-[210mm] min-h-[297mm] p-12 preview-content prose prose-sm max-w-none cursor-text"
-            dangerouslySetInnerHTML={{ __html: renderContent() }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderContent()) }}
             onMouseUp={handleTextSelection}
           />
         </div>

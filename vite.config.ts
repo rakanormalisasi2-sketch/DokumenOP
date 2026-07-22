@@ -26,13 +26,36 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Disable code splitting temporarily to fix temporal dead zone error with 'Bt'
-    // This forces all code into single bundle, eliminating cross-chunk circular deps
-    // TODO: Re-enable splitting after identifying root cause
-    // rollupOptions: {
-    //   output: {
-    //     manualChunks(id) { ... }
-    //   }
-    // }
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-supabase';
+          }
+          if (id.includes('node_modules/@tiptap') || id.includes('node_modules/prosemirror')) {
+            return 'vendor-tiptap';
+          }
+          if (id.includes('node_modules/html-to-docx')) {
+            return 'vendor-docx';
+          }
+          if (id.includes('node_modules/xlsx') || id.includes('node_modules/luckyexcel')) {
+            return 'vendor-xlsx';
+          }
+          if (id.includes('node_modules/@radix-ui') || id.includes('node_modules/lucide-react')) {
+            return 'vendor-ui';
+          }
+          if (id.includes('node_modules/@syncfusion')) {
+            return 'vendor-syncfusion';
+          }
+          if (id.includes('node_modules/docxtemplater') || id.includes('node_modules/pizzip') || id.includes('node_modules/docx-preview')) {
+            return 'vendor-docx-utils';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
   }
 }));

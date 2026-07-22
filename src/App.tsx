@@ -17,10 +17,10 @@ import NotFound from "./pages/NotFound";
 import SystemFlowDocs from "./pages/SystemFlowDocs";
 
 // Admin Pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminTemplateEditor from "./pages/admin/AdminTemplateEditor";
-import AdminFields from "./pages/admin/AdminFields";
-import AdminUsers from "./pages/admin/AdminUsers";
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminTemplateEditor = lazy(() => import('./pages/admin/AdminTemplateEditor'));
+const AdminFields = lazy(() => import('./pages/admin/AdminFields'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 // Admin Pages — lazy-loaded to keep initial bundle small
 // xlsx is heavy (2+ MB): only needed on submissions route
@@ -31,11 +31,20 @@ const AdminTemplates = lazy(() => import("./pages/admin/AdminTemplates"));
 const AdminContractDocs = lazy(() => import("./pages/admin/AdminContractDocs"));
 
 // Respondent Pages
-import RespondentDashboard from "./pages/respondent/RespondentDashboard";
-import RespondentDokumenAwal from "./pages/respondent/RespondentDokumenAwal";
-import RespondentDokumenAkhir from "./pages/respondent/RespondentDokumenAkhir";
-import RespondentHistory from "./pages/respondent/RespondentHistory";
-import TestEditorPage from "./pages/TestEditorPage";
+const RespondentDashboard = lazy(() => import('./pages/respondent/RespondentDashboard'));
+const RespondentDokumenAwal = lazy(() => import('./pages/respondent/RespondentDokumenAwal'));
+const RespondentDokumenAkhir = lazy(() => import('./pages/respondent/RespondentDokumenAkhir'));
+const RespondentHistory = lazy(() => import('./pages/respondent/RespondentHistory'));
+const TestEditorPage = lazy(() => import('./pages/TestEditorPage'));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <p className="text-sm text-on-surface-variant">Memuat halaman...</p>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -54,7 +63,9 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
 }
 
 function AppRoutes() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) return <PageLoader />;
 
   return (
     <Routes>
@@ -70,22 +81,22 @@ function AppRoutes() {
       />
 
       {/* Admin Routes */}
-      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Skeleton className="w-64 h-8" /></div>}><AdminSubmissions /></Suspense></ProtectedRoute>} />
-      <Route path="/admin/templates" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Skeleton className="w-64 h-8" /></div>}><AdminTemplates /></Suspense></ProtectedRoute>} />
-      <Route path="/admin/templates/:templateId/edit" element={<ProtectedRoute requiredRole="admin"><AdminTemplateEditor /></ProtectedRoute>} />
-      <Route path="/admin/fields" element={<ProtectedRoute requiredRole="admin"><AdminFields /></ProtectedRoute>} />
-      <Route path="/admin/kontrak" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Skeleton className="w-64 h-8" /></div>}><AdminContractDocs /></Suspense></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsers /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminSubmissions /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/templates" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminTemplates /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/templates/:templateId/edit" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminTemplateEditor /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/fields" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminFields /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/kontrak" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminContractDocs /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><Suspense fallback={<PageLoader />}><AdminUsers /></Suspense></ProtectedRoute>} />
 
       {/* Respondent Routes */}
-      <Route path="/respondent" element={<ProtectedRoute requiredRole="respondent"><RespondentDashboard /></ProtectedRoute>} />
-      <Route path="/respondent/dokumen-awal" element={<ProtectedRoute requiredRole="respondent"><RespondentDokumenAwal /></ProtectedRoute>} />
-      <Route path="/respondent/dokumen-akhir" element={<ProtectedRoute requiredRole="respondent"><RespondentDokumenAkhir /></ProtectedRoute>} />
-      <Route path="/respondent/history" element={<ProtectedRoute requiredRole="respondent"><RespondentHistory /></ProtectedRoute>} />
+      <Route path="/respondent" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDashboard /></Suspense></ProtectedRoute>} />
+      <Route path="/respondent/dokumen-awal" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDokumenAwal /></Suspense></ProtectedRoute>} />
+      <Route path="/respondent/dokumen-akhir" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDokumenAkhir /></Suspense></ProtectedRoute>} />
+      <Route path="/respondent/history" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentHistory /></Suspense></ProtectedRoute>} />
 
       {/* Test Route */}
-      <Route path="/test-editor" element={<TestEditorPage />} />
+      <Route path="/test-editor" element={<Suspense fallback={<PageLoader />}><TestEditorPage /></Suspense>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

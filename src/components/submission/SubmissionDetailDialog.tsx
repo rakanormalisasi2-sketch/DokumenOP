@@ -29,6 +29,7 @@ import { Submission, FormField, DOCUMENT_TYPE_LABELS, DocumentType, WorkCategory
 import { Plus, Trash2, Save, Printer, Eye, MessageSquare, Edit, CheckCircle } from 'lucide-react';
 import DocumentPreview from '@/components/editors/DocumentPreview';
 import { useData } from '@/contexts/DataContext';
+import DOMPurify from 'dompurify';
 
 
 
@@ -244,6 +245,8 @@ export default function SubmissionDetailDialog({
                   <div className="flex-1 border rounded-lg overflow-hidden bg-muted/30 min-h-[500px]">
                     <iframe
                       src={submission.companyProfile}
+                      sandbox="allow-same-origin"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full min-h-[500px]"
                       title="Company Profile PDF Viewer"
                     />
@@ -479,7 +482,7 @@ export default function SubmissionDetailDialog({
                             <Button variant="outline" size="sm" onClick={() => {
                               const win = window.open('', '_blank');
                               if (win) {
-                                win.document.write(`<html><head><title>Anotasi Dokumen - ${DOCUMENT_TYPE_LABELS[report.documentType]}</title><style>body{font-family:sans-serif;padding:20px;background:#f3f4f6;} .preview-content{max-width:210mm;min-height:297mm;background:white;margin:auto;box-shadow:0 0 10px rgba(0,0,0,0.1);padding:40px;}</style></head><body><div class="preview-content">${report.screenshotPdf}</div></body></html>`);
+                                win.document.write(`<html><head><title>Anotasi Dokumen - ${DOCUMENT_TYPE_LABELS[report.documentType]}</title><style>body{font-family:sans-serif;padding:20px;background:#f3f4f6;} .preview-content{max-width:210mm;min-height:297mm;background:white;margin:auto;box-shadow:0 0 10px rgba(0,0,0,0.1);padding:40px;}</style></head><body><div class="preview-content">${DOMPurify.sanitize(report.screenshotPdf)}</div></body></html>`);
                                 win.document.close();
                               }
                             }}>

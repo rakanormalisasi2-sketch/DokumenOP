@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,19 +84,23 @@ export default function AdminUsers() {
   const [manualName, setManualName] = useState('');
   const [manualEmail, setManualEmail] = useState('');
 
-  const filteredRequests = requests.filter(
-    (r) =>
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRequests = useMemo(
+    () =>
+      requests.filter(
+        (r) =>
+          r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.email.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [requests, searchQuery]
   );
 
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    const randomValues = new Uint8Array(6);
+    crypto.getRandomValues(randomValues);
+    return Array.from(randomValues)
+      .map(v => chars[v % chars.length])
+      .join('');
   };
 
   const handleApprove = (request: AccessRequest) => {

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MassDocumentGenerator from '@/components/admin/MassDocumentGenerator';
@@ -10,19 +10,26 @@ export default function AdminContractDocs() {
     const { templates, fields } = useData();
 
     // Filter templates based on tab
-    const kakTemplates = templates.filter(t => t.type?.includes('kak') || t.name.toLowerCase().includes('kak'));
-    // Fallback if no specific KAK templates found in DB, we might want to ensure they exist or use generic logic
-    // For now, let's assume 'kak_perencanaan' and 'kak_konsultansi' exist or user can add them.
+    const kakTemplates = useMemo(
+        () => templates.filter(t => t.type?.includes('kak') || t.name.toLowerCase().includes('kak')),
+        [templates]
+    );
 
     // For Contracts: filter 27 formats (Non-KAK, Non-Nota, and Phase: Persiapan)
-    const contractTemplates = templates.filter(t =>
-        !t.type?.includes('kak') &&
-        !t.type?.includes('nota') &&
-        t.phase === 'persiapan'
+    const contractTemplates = useMemo(
+        () => templates.filter(t =>
+            !t.type?.includes('kak') &&
+            !t.type?.includes('nota') &&
+            t.phase === 'persiapan'
+        ),
+        [templates]
     );
 
     // For Nota Dinas
-    const notaTemplates = templates.filter(t => t.type?.includes('nota') || t.name.toLowerCase().includes('nota'));
+    const notaTemplates = useMemo(
+        () => templates.filter(t => t.type?.includes('nota') || t.name.toLowerCase().includes('nota')),
+        [templates]
+    );
 
     return (
         <AdminLayout>

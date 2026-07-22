@@ -61,7 +61,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
               <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
                 Aplikasi mengalami error. Silakan refresh halaman atau hubungi admin.
               </p>
-              {this.state.error && (
+              {this.state.error && process.env.NODE_ENV === 'development' && (
                 <pre
                   style={{
                     background: '#fef2f2',

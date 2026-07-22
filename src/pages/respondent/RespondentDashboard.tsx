@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import RespondentLayout from '@/components/layout/RespondentLayout';
@@ -45,22 +45,30 @@ export default function RespondentDashboard() {
   const [showAnnotator, setShowAnnotator] = useState(false);
 
   // Filter submissions for current respondent only
-  const mySubmissions = submissions.filter((s) => s.respondentId === user?.id);
+  const mySubmissions = useMemo(
+    () => submissions.filter((s) => s.respondentId === user?.id),
+    [submissions, user?.id]
+  );
 
   // Filter 1 year limit
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const recentSubmissions = mySubmissions
-    .filter((s) => new Date(s.createdAt) >= oneYearAgo)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const recentSubmissions = useMemo(() => {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return mySubmissions
+      .filter((s) => new Date(s.createdAt) >= oneYearAgo)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [mySubmissions]);
 
-  const latestSubmission = recentSubmissions[0];
+  const latestSubmission = useMemo(() => recentSubmissions[0], [recentSubmissions]);
 
-  const stats = {
-    pending: mySubmissions.filter((s) => s.status === 'submitted' || s.status === 'review').length,
-    approved: mySubmissions.filter((s) => s.status === 'approved').length,
-    revision: mySubmissions.filter((s) => s.status === 'revision').length,
-  };
+  const stats = useMemo(
+    () => ({
+      pending: mySubmissions.filter((s) => s.status === 'submitted' || s.status === 'review').length,
+      approved: mySubmissions.filter((s) => s.status === 'approved').length,
+      revision: mySubmissions.filter((s) => s.status === 'revision').length,
+    }),
+    [mySubmissions]
+  );
 
   const handlePrintClick = (submission: Submission) => {
     setPrintSubmission(submission);

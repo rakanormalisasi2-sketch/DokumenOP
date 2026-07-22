@@ -1,68 +1,77 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  login: (code: string) => boolean;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_CODE = 'bidangop';
-const RESPONDENT_CODE = '122333';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('docms_user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback((code: string): boolean => {
-    let role: UserRole | null = null;
-    let userId: string = '';
-    let userName: string = '';
+  const mapSessionToUser = (session: Session | null): User | null => {
+    if (!session) return null;
+    const meta = session.user.user_metadata;
+    return {
+      id: session.user.id,
+      role: (meta?.role || 'respondent') as UserRole,
+      name: meta?.name || session.user.email || 'User',
+      email: session.user.email,
+      createdAt: new Date(session.user.created_at),
+    };
+  };
 
-    if (code === ADMIN_CODE) {
-      role = 'admin';
-      userId = 'admin1';
-      userName = 'Administrator';
-    } else if (code === RESPONDENT_CODE) {
-      // Match with sample submission that has status 'approved' (resp2 - CV Karya Mandiri)
-      role = 'respondent';
-      userId = 'resp2';
-      userName = 'CV Karya Mandiri';
-    }
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(mapSessionToUser(session));
+      setIsLoading(false);
+    });
 
-    if (role) {
-      const newUser: User = {
-        id: userId,
-        role,
-        code,
-        name: userName,
-        createdAt: new Date(),
-      };
-      setUser(newUser);
-      localStorage.setItem('docms_user', JSON.stringify(newUser));
-      return true;
-    }
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(mapSessionToUser(session));
+      setIsLoading(false);
+    });
 
-    return false;
+    return () => subscription.unsubscribe();
   }, []);
 
-  const logout = useCallback(() => {
+  const login = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { error: 'Email atau password salah. Silakan coba lagi.' };
+    }
+    return { error: null };
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('docms_user');
+    setSession(null);
   }, []);
 
   const value: AuthContextType = {
     user,
+    session,
     login,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!session,
     isAdmin: user?.role === 'admin',
+    isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

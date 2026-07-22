@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
@@ -34,12 +34,18 @@ export default function RespondentDokumenAkhir() {
   const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
 
   // Get approved 'awal' submissions for this respondent
-  const approvedAwalSubmissions = submissions.filter(
-    s => s.respondentId === user?.id && s.submissionPhase === 'awal' && s.status === 'approved'
+  const approvedAwalSubmissions = useMemo(
+    () => submissions.filter(
+      s => s.respondentId === user?.id && s.submissionPhase === 'awal' && s.status === 'approved'
+    ),
+    [submissions, user?.id]
   );
 
   // Get fields marked for 'akhir'
-  const akhirFields = fields.filter(f => f.showIn?.includes('akhir'));
+  const akhirFields = useMemo(
+    () => fields.filter(f => f.showIn?.includes('akhir')),
+    [fields]
+  );
 
   const handleSelectAwal = (awalId: string) => {
     setSelectedAwalId(awalId);

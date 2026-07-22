@@ -93,10 +93,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [contractDrafts, setContractDrafts] = useState<ContractDraft[]>(() => safeLocalStorageGet('pusdaop_contractDrafts', []));
 
   // 1. Supabase Fetch/Hydration
+  // Request deduplication — prevent parallel fetches from the same client
+  let fetchInProgress = false;
+
   useEffect(() => {
     let isMounted = true;
+    // Abort controller for timeout protection (prevents hanging requests)
+    let abortController = new AbortController();
+    const FETCH_TIMEOUT_MS = 10_000; // 10 seconds
+
+    const withTimeout = <T,>(promise: Promise<T>): Promise<T> => {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), FETCH_TIMEOUT_MS)
+      );
+      return Promise.race([promise, timeout]);
+    };
 
     const fetchAllData = async () => {
+      if (fetchInProgress) return; // Deduplicate concurrent calls
+      fetchInProgress = true;
       try {
         const [fieldsRes, submissionsRes, templatesRes, requestsRes, draftsRes] = await Promise.all([
           supabase.from('app_fields').select('*').order('item_order'),
@@ -216,12 +231,55 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     fetchAllData();
 
-    // Supabase Realtime Subscriptions
+    // Targeted fetch functions — only refetch the changed table
+    const fetchFields = async () => {
+      if (!isMounted) return;
+      const { data } = await supabase.from('app_fields').select('*').order('item_order');
+      if (data && isMounted) {
+        setFields(data.map((f: any) => ({
+          ...f, order: f.item_order, visibleTo: f.visible_to, filledBy: f.filled_by,
+          showIn: f.show_in || [], showInAdmin: f.show_in_admin || [],
+          linkedFieldId: f.linked_field_id, terbilangFormat: f.terbilang_format,
+          dateAdditionDays: f.date_addition_days
+        })) as FormField[]);
+      }
+    };
+
+    const fetchSubmissions = async () => {
+      if (!isMounted) return;
+      const { data } = await supabase.from('submissions').select('*');
+      if (data && isMounted) {
+        setSubmissions(data.map((s: any) => ({
+          ...s, respondentId: s.respondent_id, respondentName: s.respondent_name,
+          submissionPhase: s.submission_phase, documentType: s.document_type,
+          workCategory: s.work_category, adminFeedback: s.admin_feedback,
+          documentDate: s.document_date, createdAt: new Date(s.created_at),
+          updatedAt: new Date(s.updated_at), kakType: s.kak_type,
+          workforceRequirements: s.workforce_requirements, schedulePhases: s.schedule_phases,
+          durasiPelaksanaan: s.durasi_pelaksanaan, lampiranBaphpItems: s.lampiran_baphp_items,
+          adendumDocuments: s.adendum_documents, errorReports: s.error_reports,
+          documentDates: s.document_dates, companyProfile: s.company_profile,
+          contractFile: s.contract_file
+        })) as Submission[]);
+      }
+    };
+
+    const fetchDrafts = async () => {
+      if (!isMounted) return;
+      const { data } = await supabase.from('contract_drafts').select('*');
+      if (data && isMounted) {
+        setContractDrafts(data.map((d: any) => ({
+          ...d, lastUpdated: new Date(d.last_updated)
+        })) as ContractDraft[]);
+      }
+    };
+
+    // Supabase Realtime Subscriptions — each table only refetches itself
     const channel = supabase.channel('schema-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_fields' }, () => { fetchAllData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, () => { fetchAllData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'document_templates' }, () => { fetchAllData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contract_drafts' }, () => { fetchAllData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_fields' }, fetchFields)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, fetchSubmissions)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'document_templates' }, fetchAllData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contract_drafts' }, fetchDrafts)
       .subscribe();
 
     return () => {

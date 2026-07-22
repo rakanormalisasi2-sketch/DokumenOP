@@ -128,24 +128,27 @@ const ImageResizeHandles = ({ image, imageTransform, onMouseDown, isRotating }: 
     
     updatePosition();
     
-    // Update on various events
+    // Update on various events (event-driven, no polling)
     window.addEventListener('resize', updatePosition);
     const scrollContainer = image.closest('.overflow-auto');
     scrollContainer?.addEventListener('scroll', updatePosition);
     
+    // Use MutationObserver for style/attribute changes (covers resize/rotate)
     const observer = new MutationObserver(updatePosition);
-    observer.observe(image, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(image, { attributes: true, attributeFilter: ['style', 'width', 'height'] });
     
-    // Update frequently to catch all changes
-    const interval = setInterval(updatePosition, 50);
+    // Use ResizeObserver to catch DOM-driven size changes (replaces setInterval)
+    const resizeObserver = new ResizeObserver(updatePosition);
+    resizeObserver.observe(image);
     
     return () => {
       window.removeEventListener('resize', updatePosition);
       scrollContainer?.removeEventListener('scroll', updatePosition);
       observer.disconnect();
-      clearInterval(interval);
+      resizeObserver.disconnect();
     };
   }, [image, imageTransform]);
+
   
   const handleSize = 10;
   const rotateHandleOffset = -35;

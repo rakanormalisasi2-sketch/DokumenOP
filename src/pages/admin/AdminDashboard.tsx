@@ -1,4 +1,5 @@
 import { useData } from '@/contexts/DataContext';
+import { useMemo } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DOCUMENT_TYPE_LABELS } from '@/types';
@@ -20,16 +21,16 @@ import { Link } from 'react-router-dom';
 export default function AdminDashboard() {
   const { submissions } = useData();
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: submissions.length,
     pending: submissions.filter((s) => s.status === 'submitted' || s.status === 'review').length,
     approved: submissions.filter((s) => s.status === 'approved').length,
     revision: submissions.filter((s) => s.status === 'revision' || s.status === 'rejected').length,
-  };
+  }), [submissions]);
 
-  const recentSubmissions = [...submissions]
+  const recentSubmissions = useMemo(() => [...submissions]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+    .slice(0, 5), [submissions]);
 
   const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: id });
 
