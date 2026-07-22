@@ -14,7 +14,217 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_fields: {
+        Row: {
+          id: string
+          name: string
+          label: string
+          type: string
+          placeholder: string | null
+          options: Json | null
+          required: boolean
+          item_order: number
+          visible_to: string
+          filled_by: string
+          phase: string
+          show_in: Json | null
+          show_in_admin: Json | null
+          linked_field_id: string | null
+          terbilang_format: string | null
+          date_addition_days: number | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          label: string
+          type: string
+          placeholder?: string | null
+          options?: Json | null
+          required?: boolean
+          item_order: number
+          visible_to: string
+          filled_by: string
+          phase: string
+          show_in?: Json | null
+          show_in_admin?: Json | null
+          linked_field_id?: string | null
+          terbilang_format?: string | null
+          date_addition_days?: number | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          label?: string
+          type?: string
+          placeholder?: string | null
+          options?: Json | null
+          required?: boolean
+          item_order?: number
+          visible_to?: string
+          filled_by?: string
+          phase?: string
+          show_in?: Json | null
+          show_in_admin?: Json | null
+          linked_field_id?: string | null
+          terbilang_format?: string | null
+          date_addition_days?: number | null
+        }
+      }
+      document_templates: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          category: string | null
+          phase: string
+          format: string
+          last_updated: string | null
+        }
+        Insert: {
+          id: string
+          name: string
+          type: string
+          category?: string | null
+          phase: string
+          format: string
+          last_updated?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          category?: string | null
+          phase?: string
+          format?: string
+          last_updated?: string | null
+        }
+      }
+      submissions: {
+        Row: {
+          id: string
+          respondent_id: string
+          respondent_name: string
+          submission_phase: string
+          status: string
+          data: Json
+          document_type: string | null
+          work_category: string | null
+          admin_feedback: string | null
+          document_date: string | null
+          created_at: string | null
+          updated_at: string | null
+          kak_type: string | null
+          workforce_requirements: Json | null
+          schedule_phases: Json | null
+          durasi_pelaksanaan: number | null
+          lampiran_baphp_items: Json | null
+          adendum_documents: Json | null
+          error_reports: Json | null
+          document_dates: Json | null
+          company_profile: string | null
+          contract_file: string | null
+        }
+        Insert: {
+          id?: string
+          respondent_id: string
+          respondent_name: string
+          submission_phase: string
+          status: string
+          data?: Json
+          document_type?: string | null
+          work_category?: string | null
+          admin_feedback?: string | null
+          document_date?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          kak_type?: string | null
+          workforce_requirements?: Json | null
+          schedule_phases?: Json | null
+          durasi_pelaksanaan?: number | null
+          lampiran_baphp_items?: Json | null
+          adendum_documents?: Json | null
+          error_reports?: Json | null
+          document_dates?: Json | null
+          company_profile?: string | null
+          contract_file?: string | null
+        }
+        Update: {
+          id?: string
+          respondent_id?: string
+          respondent_name?: string
+          submission_phase?: string
+          status?: string
+          data?: Json
+          document_type?: string | null
+          work_category?: string | null
+          admin_feedback?: string | null
+          document_date?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          kak_type?: string | null
+          workforce_requirements?: Json | null
+          schedule_phases?: Json | null
+          durasi_pelaksanaan?: number | null
+          lampiran_baphp_items?: Json | null
+          adendum_documents?: Json | null
+          error_reports?: Json | null
+          document_dates?: Json | null
+          company_profile?: string | null
+          contract_file?: string | null
+        }
+      }
+      access_requests: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          request_date: string | null
+          status: string
+          code: string | null
+          approved_at: string | null
+          approved_by: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          request_date?: string | null
+          status: string
+          code?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          request_date?: string | null
+          status?: string
+          code?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+        }
+      }
+      contract_drafts: {
+        Row: {
+          id: string
+          type: string
+          last_updated: string | null
+          data: Json
+        }
+        Insert: {
+          id?: string
+          type: string
+          last_updated?: string | null
+          data?: Json
+        }
+        Update: {
+          id?: string
+          type?: string
+          last_updated?: string | null
+          data?: Json
+        }
+      }
     }
     Views: {
       [_ in never]: never
