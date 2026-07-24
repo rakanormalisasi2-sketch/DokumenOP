@@ -38,7 +38,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (authError || !user) {
       console.error('Auth verification error:', authError);
-      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+      return res.status(401).json({ 
+        error: `Unauthorized: Invalid token. Details: ${authError?.message || 'No user found'}` 
+      });
     }
 
     if (user.user_metadata?.role !== 'admin') {
