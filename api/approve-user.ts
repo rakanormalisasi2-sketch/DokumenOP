@@ -33,33 +33,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+      console.error('Missing env vars:', { url: !!supabaseUrl, anon: !!supabaseAnonKey, service: !!supabaseServiceKey });
       return res.status(500).json({ error: 'Server configuration error: Missing Supabase Keys' });
     }
 
-    // 1. Verifikasi token admin via HTTP langsung ke Supabase Auth
-    // (Menghindari konflik antara service role key dan user JWT)
+    // 1. Verifikasi token admin menggunakan Anon Key (Wajib untuk endpoint Auth)
     const token = authHeader.replace('Bearer ', '');
-    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'apikey': supabaseServiceKey
-      }
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
     });
+    
+    const { data: { user }, error: authError } = await userClient.auth.getUser(token);
 
-    if (!userRes.ok) {
+    if (authError || !user) {
+      console.error('Auth verification error:', authError);
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
-
-    const user = await userRes.json();
 
     if (user.user_metadata?.role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden: Only admin can approve requests' });
     }
 
-    // 2. Gunakan Service Role Key untuk ByPass RLS & Auth Admin API
+    // 2. Gunakan Service Role Key untuk operasi Admin Auth & Bypass RLS
     const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
