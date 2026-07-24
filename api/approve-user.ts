@@ -39,22 +39,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error: Missing Supabase Keys' });
     }
 
-    // Gunakan Service Role Key untuk semua operasi server-side
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
+    // 1. Verifikasi token admin via HTTP langsung ke Supabase Auth
+    // (Menghindari konflik antara service role key dan user JWT)
+    const token = authHeader.replace('Bearer ', '');
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseServiceKey
+      }
     });
 
-    // 1. Verifikasi token admin — ekstrak token dari header Authorization
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await adminClient.auth.getUser(token);
-    
-    if (authError || !user) {
+    if (!userRes.ok) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
+
+    const user = await userRes.json();
 
     if (user.user_metadata?.role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden: Only admin can approve requests' });
     }
+
+    // 2. Gunakan Service Role Key untuk ByPass RLS & Auth Admin API
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
 
     // 3. Generate Password Super Aman
     const securePassword = generateSecurePassword();

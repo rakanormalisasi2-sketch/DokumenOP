@@ -26,22 +26,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error: Missing Supabase Keys' });
     }
 
-    // Gunakan Service Role Key untuk semua operasi server-side
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
+    // Verifikasi token admin via HTTP langsung ke Supabase Auth
+    const token = authHeader.replace('Bearer ', '');
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseServiceKey
+      }
     });
 
-    // Verifikasi token admin langsung via adminClient
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await adminClient.auth.getUser(token);
-    
-    if (authError || !user) {
+    if (!userRes.ok) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
+
+    const user = await userRes.json();
 
     if (user.user_metadata?.role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden: Only admin can delete accounts' });
     }
+
+    // Gunakan Service Role Key untuk operasi Auth Admin
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
 
     // 3. Hapus akun pengguna di Supabase Auth System
     const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(authUserId);
