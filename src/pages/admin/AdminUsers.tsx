@@ -84,6 +84,10 @@ export default function AdminUsers() {
   const [manualName, setManualName] = useState('');
   const [manualEmail, setManualEmail] = useState('');
 
+  const [isApproving, setIsApproving] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
   const filteredRequests = useMemo(
     () =>
       requests.filter(
@@ -94,19 +98,43 @@ export default function AdminUsers() {
     [requests, searchQuery]
   );
 
-  const generateCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const randomValues = new Uint8Array(6);
-    crypto.getRandomValues(randomValues);
-    return Array.from(randomValues)
-      .map(v => chars[v % chars.length])
-      .join('');
-  };
-
-  const handleApprove = (request: AccessRequest) => {
+  const handleApprove = async (request: AccessRequest) => {
     setSelectedRequest(request);
-    setGeneratedCode(generateCode());
-    setShowGenerateDialog(true);
+    setIsApproving(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sesi telah berakhir, silakan login ulang.');
+
+      const response = await fetch('/api/approve-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          email: request.email,
+          name: request.name,
+          requestId: request.id
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Gagal menyetujui akun');
+
+      setGeneratedPassword(data.password);
+      setShowPasswordDialog(true);
+      
+      // Update local state to reflect approved status
+      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'approved' } : r));
+      toast.success('Akun responden berhasil dibuat otomatis!');
+      
+    } catch (error: any) {
+      console.error('Approve error:', error);
+      toast.error(error.message || 'Gagal membuat akun');
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const handleManualCreate = () => {
@@ -249,9 +277,15 @@ export default function AdminUsers() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleApprove(request)}
+                          className="gap-2 bg-success text-success-foreground hover:bg-success/90"
+                          disabled={isApproving && selectedRequest?.id === request.id}
                         >
-                          <KeyRound className="w-4 h-4 mr-2" />
-                          Buat Kode
+                          {isApproving && selectedRequest?.id === request.id ? (
+                            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
+                          Setujui
                         </Button>
                       </div>
                     </div>
@@ -340,28 +374,41 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
 
-        {/* Generate Code Dialog (for pending requests) */}
-        <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+        {/* Generated Password Dialog (for newly approved requests) */}
+        <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Buat Kode Akses</DialogTitle>
+              <DialogTitle className="text-success">Akun Berhasil Dibuat!</DialogTitle>
               <DialogDescription>
-                Kode akses untuk {selectedRequest?.name}
+                Akun untuk responden <strong>{selectedRequest?.name}</strong> telah berhasil didaftarkan.
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-6">
-              <div className="flex items-center justify-center gap-4">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Kode Akses</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-3xl font-mono font-bold bg-muted px-4 py-2 rounded-lg">
-                      {generatedCode}
+              <div className="bg-warning/10 border border-warning/20 p-4 rounded-lg mb-6">
+                <p className="text-sm text-warning font-medium">⚠️ Peringatan Penting</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Harap salin password di bawah ini dan berikan kepada responden. Password ini dibuat otomatis dengan keamanan tinggi dan <strong>tidak akan ditampilkan lagi</strong> setelah Anda menutup jendela ini.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="text-center w-full">
+                  <p className="text-sm text-muted-foreground mb-2">Email Login</p>
+                  <code className="text-lg font-mono bg-muted px-4 py-2 rounded-lg block mb-4 select-all">
+                    {selectedRequest?.email}
+                  </code>
+                  
+                  <p className="text-sm text-muted-foreground mb-2">Password Sementara</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <code className="text-2xl font-mono font-bold bg-muted px-4 py-3 rounded-lg select-all">
+                      {generatedPassword}
                     </code>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(generatedCode)}
+                      className="h-[52px] w-[52px]"
+                      onClick={() => copyToClipboard(generatedPassword)}
                     >
                       {copied ? (
                         <Check className="w-5 h-5 text-success" />
@@ -372,30 +419,11 @@ export default function AdminUsers() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground text-center mt-4">
-                Email: {selectedRequest?.email}
-              </p>
             </div>
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
-                Batal
-              </Button>
-              <Button variant="secondary" onClick={() => handleConfirmCode(false)}>
-                Simpan Saja
-              </Button>
-              <Button onClick={() => handleConfirmCode(true)} disabled={isSendingEmail} className="gap-2">
-                {isSendingEmail ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Mengirim...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Simpan & Kirim Email
-                  </>
-                )}
+              <Button onClick={() => setShowPasswordDialog(false)}>
+                Saya Sudah Menyalinnya (Tutup)
               </Button>
             </DialogFooter>
           </DialogContent>
