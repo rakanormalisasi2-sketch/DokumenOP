@@ -190,6 +190,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
 
         if (requestsRes.data) {
+          console.log('[DataContext] access_requests fetched:', requestsRes.data.length, 'rows');
           const parsed = requestsRes.data.map((r: any) => ({
             ...r,
             requestDate: new Date(r.request_date),
@@ -197,6 +198,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             approvedBy: r.approved_by
           })) as AccessRequest[];
           setAccessRequests(parsed);
+        }
+        if (requestsRes.error) {
+          console.error('[DataContext] access_requests fetch error:', requestsRes.error);
         }
 
         if (draftsRes.data) {
@@ -274,12 +278,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const fetchAccessRequests = async () => {
+      if (!isMounted) return;
+      const { data, error } = await supabase.from('access_requests').select('*');
+      if (error) {
+        console.error('[DataContext] realtime access_requests fetch error:', error);
+        return;
+      }
+      if (data && isMounted) {
+        setAccessRequests(data.map((r: any) => ({
+          ...r,
+          requestDate: new Date(r.request_date),
+          approvedAt: r.approved_at ? new Date(r.approved_at) : undefined,
+          approvedBy: r.approved_by
+        })) as AccessRequest[]);
+      }
+    };
+
     // Supabase Realtime Subscriptions — each table only refetches itself
     const channel = supabase.channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'app_fields' }, fetchFields)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, fetchSubmissions)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'document_templates' }, fetchAllData)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contract_drafts' }, fetchDrafts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'access_requests' }, fetchAccessRequests)
       .subscribe();
 
     return () => {
