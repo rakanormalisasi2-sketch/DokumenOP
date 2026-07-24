@@ -28,20 +28,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server configuration error: Missing Supabase Keys' });
     }
 
-    // Verifikasi token admin menggunakan Anon Key (Wajib untuk endpoint Auth)
+    // Verifikasi token admin via HTTP menggunakan Anon Key (Wajib untuk Auth)
     const token = authHeader.replace('Bearer ', '');
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey
+      }
     });
-    
-    const { data: { user }, error: authError } = await userClient.auth.getUser(token);
 
-    if (authError || !user) {
-      console.error('Auth verification error:', authError);
+    if (!userRes.ok) {
+      const errorText = await userRes.text();
+      console.error('Auth verification error:', errorText);
       return res.status(401).json({ 
-        error: `Unauthorized: Invalid token. Details: ${authError?.message || 'No user found'}` 
+        error: `Unauthorized: Invalid token. Details: ${errorText}` 
       });
     }
+
+    const user = await userRes.json();
 
     if (user.user_metadata?.role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden: Only admin can delete accounts' });
