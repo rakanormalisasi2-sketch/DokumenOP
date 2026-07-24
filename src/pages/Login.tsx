@@ -79,17 +79,21 @@ export default function Login() {
     }
     setIsRequesting(true);
     try {
-      await supabase.from('access_requests').insert({
+      const { error } = await supabase.from('access_requests').insert({
         id: crypto.randomUUID(),
         name: requestName,
         email: requestEmail,
         status: 'pending',
         request_date: new Date().toISOString(),
       });
+      
+      if (error) throw error;
+
       setRequestSuccess(true);
       toast.success('Permintaan akses berhasil dikirim!');
-    } catch {
-      toast.error('Gagal mengirim permintaan. Silakan coba lagi.');
+    } catch (error: any) {
+      console.error('Request Access Error:', error);
+      toast.error(`Gagal mengirim permintaan: ${error.message || 'Akses Ditolak (Periksa Aturan RLS)'}`);
     } finally {
       setIsRequesting(false);
     }
