@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useData } from '@/contexts/DataContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,26 @@ const sampleRequests: AccessRequest[] = [
 ];
 
 export default function AdminUsers() {
-  const [requests, setRequests] = useState<AccessRequest[]>(sampleRequests);
+  const { accessRequests } = useData();
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
+
+  useEffect(() => {
+    // Map data database ke struktur AccessRequest UI
+    if (accessRequests && accessRequests.length > 0) {
+      const mapped = accessRequests.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        requestDate: new Date(r.request_date || r.requestDate || Date.now()),
+        status: r.status,
+        code: r.code
+      }));
+      setRequests(mapped as AccessRequest[]);
+    } else {
+      setRequests([]);
+    }
+  }, [accessRequests]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
