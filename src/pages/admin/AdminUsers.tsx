@@ -159,6 +159,24 @@ export default function AdminUsers() {
     }
   };
 
+  const handleRejectRequest = async (request: AccessRequest) => {
+    if (!window.confirm(`Hapus permintaan dari ${request.name}? Data ini akan dihapus permanen dari daftar.`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('access_requests')
+        .delete()
+        .eq('id', request.id);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.filter(r => r.id !== request.id));
+      toast.success(`Permintaan dari ${request.name} berhasil dihapus.`);
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menghapus permintaan.');
+    }
+  };
+
   const handleDelete = async (request: AccessRequest) => {
     // Check if we have the auth user id stored in the 'code' field
     if (!request.code) {
@@ -350,6 +368,14 @@ export default function AdminUsers() {
                             <Check className="w-4 h-4" />
                           )}
                           Setujui
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleRejectRequest(request)}
+                          disabled={isApproving && selectedRequest?.id === request.id}
+                        >
+                          Tolak
                         </Button>
                       </div>
                     </div>
