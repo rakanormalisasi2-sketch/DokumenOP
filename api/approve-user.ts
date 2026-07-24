@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 // Generate a secure random password (minimum 12 chars, alphanumeric + symbols)
 function generateSecurePassword(): string {
@@ -111,11 +112,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw updateError;
     }
 
-    // 6. Kembalikan respons sukses ke Admin beserta Password rahasia yang dihasilkan
+    // 6. Kirim Email Otomatis Menggunakan Nodemailer (jika SMTP dikonfigurasi)
+    let emailSent = false;
+    let emailErrorMsg = '';
+    
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail', // Asumsi menggunakan Gmail (App Password)
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        const mailOptions = {
+          from: `"PUSDAOP Admin" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: 'Akses Portal PUSDAOP Disetujui',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+              <h2 style="color: #0ea5e9; margin-top: 0;">Permohonan Akses Disetujui</h2>
+              <p>Yth. <strong>${name}</strong>,</p>
+              <p>Permohonan akses Anda ke Portal Operasi Dokumen Pemerintah (PUSDAOP) telah <strong>disetujui</strong>.</p>
+              <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;">Berikut adalah kredensial login Anda:</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                <p style="margin: 5px 0;"><strong>Password Sementara:</strong> <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-family: monospace; letter-spacing: 1px; font-weight: bold;">${securePassword}</span></p>
+              </div>
+              <p style="color: #64748b; font-size: 14px;">Silakan login menggunakan kredensial di atas. Jaga kerahasiaan password ini.</p>
+              <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 20px 0;" />
+              <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">Email ini dikirim secara otomatis oleh sistem PUSDAOP. Harap tidak membalas email ini.</p>
+            </div>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        emailSent = true;
+      } catch (err: any) {
+        console.error('Failed to send email:', err);
+        emailErrorMsg = err.message || 'Gagal mengirim email';
+      }
+    }
+
+    // 7. Kembalikan respons sukses ke Admin
     return res.status(200).json({ 
       success: true, 
-      message: 'Akun responden berhasil dibuat!',
-      password: securePassword 
+      message: emailSent 
+        ? 'Akun responden berhasil dibuat dan password telah dikirim ke email.'
+        : 'Akun responden berhasil dibuat. (Email belum terkirim: SMTP belum dikonfigurasi)',
+      password: securePassword, // Tetap kirimkan ke UI untuk berjaga-jaga
+      emailSent: emailSent,
+      emailError: emailErrorMsg
     });
 
   } catch (error: any) {

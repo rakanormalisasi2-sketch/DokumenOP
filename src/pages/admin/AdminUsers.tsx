@@ -143,13 +143,16 @@ export default function AdminUsers() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Gagal menyetujui akun');
 
-      setGeneratedPassword(data.password);
-      setShowPasswordDialog(true);
-      
       // Update local state to reflect approved status
-      // We manually add the new auth uid to the 'code' property so we can delete it immediately without refreshing
       setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'approved', code: data.authUserId || undefined } : r));
-      toast.success('Akun responden berhasil dibuat otomatis!');
+      
+      if (data.emailSent) {
+        toast.success(`Akun berhasil dibuat! Password telah dikirim ke ${request.email}`);
+      } else {
+        toast.success('Akun responden berhasil dibuat otomatis!');
+        setGeneratedPassword(data.password);
+        setShowPasswordDialog(true);
+      }
       
     } catch (error: any) {
       console.error('Approve error:', error);
