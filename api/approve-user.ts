@@ -86,10 +86,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 5. Update Status di tabel access_requests menjadi "approved"
+    // Kita simpan UID Auth user yang baru dibuat ke dalam kolom 'code' untuk referensi penghapusan nanti
     const { error: updateError } = await adminClient
       .from('access_requests')
       .update({
         status: 'approved',
+        code: newUser.user?.id, 
         approved_at: new Date().toISOString(),
         approved_by: user.id
       })

@@ -85,6 +85,7 @@ export default function AdminUsers() {
   const [manualEmail, setManualEmail] = useState('');
 
   const [isApproving, setIsApproving] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
@@ -126,7 +127,8 @@ export default function AdminUsers() {
       setShowPasswordDialog(true);
       
       // Update local state to reflect approved status
-      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'approved' } : r));
+      // We manually add the new auth uid to the 'code' property so we can delete it immediately without refreshing
+      setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'approved', code: data.authUserId || undefined } : r));
       toast.success('Akun responden berhasil dibuat otomatis!');
       
     } catch (error: any) {
@@ -134,6 +136,48 @@ export default function AdminUsers() {
       toast.error(error.message || 'Gagal membuat akun');
     } finally {
       setIsApproving(false);
+    }
+  };
+
+  const handleDelete = async (request: AccessRequest) => {
+    // Check if we have the auth user id stored in the 'code' field
+    if (!request.code) {
+      toast.error('Gagal menghapus: UID pengguna tidak ditemukan di data ini (Akun dibuat sebelum sistem auto-delete). Hapus manual via Supabase Dashboard.');
+      return;
+    }
+
+    if (!window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS PERMANEN akun ${request.name} (${request.email})? Seluruh akses login mereka akan dicabut seketika.`)) {
+      return;
+    }
+
+    setIsDeletingId(request.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sesi telah berakhir, silakan login ulang.');
+
+      const response = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          authUserId: request.code, // We stored the UID in the code column earlier
+          requestId: request.id
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Gagal menghapus akun');
+
+      setRequests(prev => prev.filter(r => r.id !== request.id));
+      toast.success('Akun responden berhasil dihapus permanen!');
+      
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Gagal menghapus akun');
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
@@ -338,33 +382,23 @@ export default function AdminUsers() {
                         </code>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="success">Aktif</Badge>
+                        <Badge variant="success">Aktif (Responden)</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button
-                            variant="ghost"
+                            variant="destructive"
                             size="sm"
-                            onClick={() => copyToClipboard(request.code || '')}
-                            title="Salin kode"
+                            onClick={() => handleDelete(request)}
+                            disabled={isDeletingId === request.id}
+                            title="Hapus Akun Permanen"
                           >
-                            {copied ? (
-                              <Check className="w-4 h-4" />
+                            {isDeletingId === request.id ? (
+                               <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <Copy className="w-4 h-4" />
+                               "Hapus"
                             )}
                           </Button>
-                          {request.email && request.email !== '-' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => sendAccessCodeEmail(request.email, request.name, request.code || '')}
-                              disabled={isSendingEmail}
-                              title="Kirim ulang ke email"
-                            >
-                              <Mail className="w-4 h-4" />
-                            </Button>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>

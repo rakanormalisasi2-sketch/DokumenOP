@@ -44,6 +44,33 @@ export default function RespondentDashboard() {
   const [previewType, setPreviewType] = useState<DocumentType | null>(null);
   const [showAnnotator, setShowAnnotator] = useState(false);
 
+  // Password change state
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error('Password minimal 6 karakter');
+      return;
+    }
+    
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      toast.success('Password berhasil diperbarui! Silakan gunakan password baru ini untuk login selanjutnya.');
+      setShowPasswordDialog(false);
+      setNewPassword('');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal mengubah password');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   // Filter submissions for current respondent only
   const mySubmissions = useMemo(
     () => submissions.filter((s) => s.respondentId === user?.id),
@@ -92,12 +119,21 @@ export default function RespondentDashboard() {
           <h1 className="font-headline-lg text-3xl font-bold text-primary">Dashboard Pengajuan</h1>
           <p className="font-body-md text-base text-on-surface-variant mt-1">Pantau status dan riwayat pengajuan dokumen proyek Anda.</p>
         </div>
-        <Link to="/respondent/dokumen-awal" className="self-start sm:self-auto">
-          <button className="bg-secondary text-on-secondary font-label-md text-sm px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-on-secondary-fixed-variant transition-colors shadow-sm">
-            <FileText className="w-5 h-5" />
-            <span>Buat Pengajuan Dokumen Awal</span>
+        <div className="flex flex-col sm:flex-row items-center gap-3 self-start sm:self-auto">
+          <button 
+            onClick={() => setShowPasswordDialog(true)}
+            className="border border-outline-variant text-on-surface-variant font-label-md text-sm px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-surface-container-low transition-colors w-full sm:w-auto justify-center"
+          >
+            <span>Ubah Password</span>
           </button>
-        </Link>
+          
+          <Link to="/respondent/dokumen-awal" className="w-full sm:w-auto">
+            <button className="bg-secondary text-on-secondary font-label-md text-sm px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-on-secondary-fixed-variant transition-colors shadow-sm w-full justify-center">
+              <FileText className="w-5 h-5" />
+              <span>Buat Pengajuan Baru</span>
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Bento Grid Layout */}
@@ -234,6 +270,40 @@ export default function RespondentDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Change Password Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ganti Password Akun</DialogTitle>
+            <DialogDescription>
+              Silakan buat password baru yang mudah Anda ingat.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password Baru</label>
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full p-3 border rounded-lg"
+                placeholder="Minimal 6 karakter"
+                minLength={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowPasswordDialog(false)}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={isUpdatingPassword || newPassword.length < 6}>
+                {isUpdatingPassword ? 'Menyimpan...' : 'Simpan Password'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
