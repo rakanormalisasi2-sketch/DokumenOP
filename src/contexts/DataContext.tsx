@@ -4,6 +4,7 @@ import { templateStorage } from '@/lib/templateStorage';
 import { r2Storage } from '@/integrations/r2/client';
 import { CONTRACT_FORMATS } from '@/lib/contractFormats';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface DataContextType {
   fields: FormField[];
@@ -327,51 +328,87 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const order = fields.length + 1;
     const newField: FormField = { ...field, id, order };
     
-    // Optimistic Update
-    setFields((prev) => [...prev, newField]);
-
-    // DB Update
-    try {
-      await supabase.from('app_fields').insert({
+    // Backup state for rollback
+    setFields((prev) => {
+      const next = [...prev, newField];
+      
+      // We run the async DB update immediately
+      supabase.from('app_fields').insert({
         id, name: field.name, label: field.label, type: field.type, placeholder: field.placeholder,
         options: field.options, required: field.required, item_order: order,
         visible_to: field.visibleTo, filled_by: field.filledBy, phase: field.phase,
         show_in: field.showIn, show_in_admin: field.showInAdmin, linked_field_id: field.linkedFieldId,
         terbilang_format: field.terbilangFormat, date_addition_days: field.dateAdditionDays
+      }).then(({ error }) => {
+        if (error) {
+          console.error('Insert Field Error:', error);
+          toast.error(`Gagal menyimpan field: ${error.message}`);
+          // Rollback
+          setFields(prev);
+        } else {
+          toast.success('Field berhasil ditambahkan');
+        }
       });
-    } catch (e) {
-      console.error(e);
-    }
+      
+      return next; // Optimistic return
+    });
   }, [fields.length]);
 
   const updateField = useCallback(async (id: string, fieldData: Partial<FormField>) => {
-    setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...fieldData } : f)));
-    
-    const updates: any = {};
-    if (fieldData.name !== undefined) updates.name = fieldData.name;
-    if (fieldData.label !== undefined) updates.label = fieldData.label;
-    if (fieldData.type !== undefined) updates.type = fieldData.type;
-    if (fieldData.placeholder !== undefined) updates.placeholder = fieldData.placeholder;
-    if (fieldData.options !== undefined) updates.options = fieldData.options;
-    if (fieldData.required !== undefined) updates.required = fieldData.required;
-    if (fieldData.order !== undefined) updates.item_order = fieldData.order;
-    if (fieldData.visibleTo !== undefined) updates.visible_to = fieldData.visibleTo;
-    if (fieldData.filledBy !== undefined) updates.filled_by = fieldData.filledBy;
-    if (fieldData.phase !== undefined) updates.phase = fieldData.phase;
-    if (fieldData.showIn !== undefined) updates.show_in = fieldData.showIn;
-    if (fieldData.showInAdmin !== undefined) updates.show_in_admin = fieldData.showInAdmin;
-    if (fieldData.linkedFieldId !== undefined) updates.linked_field_id = fieldData.linkedFieldId;
-    if (fieldData.terbilangFormat !== undefined) updates.terbilang_format = fieldData.terbilangFormat;
-    if (fieldData.dateAdditionDays !== undefined) updates.date_addition_days = fieldData.dateAdditionDays;
+    setFields((prev) => {
+      const original = prev;
+      const next = prev.map((f) => (f.id === id ? { ...f, ...fieldData } : f));
+      
+      const updates: any = {};
+      if (fieldData.name !== undefined) updates.name = fieldData.name;
+      if (fieldData.label !== undefined) updates.label = fieldData.label;
+      if (fieldData.type !== undefined) updates.type = fieldData.type;
+      if (fieldData.placeholder !== undefined) updates.placeholder = fieldData.placeholder;
+      if (fieldData.options !== undefined) updates.options = fieldData.options;
+      if (fieldData.required !== undefined) updates.required = fieldData.required;
+      if (fieldData.order !== undefined) updates.item_order = fieldData.order;
+      if (fieldData.visibleTo !== undefined) updates.visible_to = fieldData.visibleTo;
+      if (fieldData.filledBy !== undefined) updates.filled_by = fieldData.filledBy;
+      if (fieldData.phase !== undefined) updates.phase = fieldData.phase;
+      if (fieldData.showIn !== undefined) updates.show_in = fieldData.showIn;
+      if (fieldData.showInAdmin !== undefined) updates.show_in_admin = fieldData.showInAdmin;
+      if (fieldData.linkedFieldId !== undefined) updates.linked_field_id = fieldData.linkedFieldId;
+      if (fieldData.terbilangFormat !== undefined) updates.terbilang_format = fieldData.terbilangFormat;
+      if (fieldData.dateAdditionDays !== undefined) updates.date_addition_days = fieldData.dateAdditionDays;
 
-    if (Object.keys(updates).length > 0) {
-      await supabase.from('app_fields').update(updates).eq('id', id);
-    }
+      if (Object.keys(updates).length > 0) {
+        supabase.from('app_fields').update(updates).eq('id', id).then(({ error }) => {
+          if (error) {
+            console.error('Update Field Error:', error);
+            toast.error(`Gagal memperbarui field: ${error.message}`);
+            // Rollback
+            setFields(original);
+          } else {
+            toast.success('Field berhasil diperbarui');
+          }
+        });
+      }
+      return next;
+    });
   }, []);
 
   const deleteField = useCallback(async (id: string) => {
-    setFields((prev) => prev.filter((f) => f.id !== id));
-    await supabase.from('app_fields').delete().eq('id', id);
+    setFields((prev) => {
+      const original = prev;
+      const next = prev.filter((f) => f.id !== id);
+      
+      supabase.from('app_fields').delete().eq('id', id).then(({ error }) => {
+        if (error) {
+          console.error('Delete Field Error:', error);
+          toast.error(`Gagal menghapus field: ${error.message}`);
+          // Rollback
+          setFields(original);
+        } else {
+          toast.success('Field berhasil dihapus');
+        }
+      });
+      return next;
+    });
   }, []);
 
   const addSubmission = useCallback(async (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => {
