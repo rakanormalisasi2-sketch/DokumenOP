@@ -45,6 +45,14 @@ interface AccessRequest {
   code?: string;
 }
 
+interface RespondentUser {
+  id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  last_sign_in_at?: string;
+}
+
 const sampleRequests: AccessRequest[] = [
   {
     id: '1',
@@ -91,6 +99,35 @@ export default function AdminUsers() {
       setRequests([]);
     }
   }, [accessRequests]);
+
+  const [respondentUsers, setRespondentUsers] = useState<RespondentUser[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  const fetchRespondents = async () => {
+    try {
+      setIsLoadingUsers(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/list-users', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRespondentUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch respondents:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRespondents();
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
@@ -146,6 +183,9 @@ export default function AdminUsers() {
       // Update local state to reflect approved status
       setRequests(prev => prev.map(r => r.id === request.id ? { ...r, status: 'approved', code: data.authUserId || undefined } : r));
       
+      // Refresh real respondents list
+      fetchRespondents();
+
       if (data.emailSent) {
         toast.success(`Akun berhasil dibuat! Password telah dikirim ke ${request.email}`);
       } else {
@@ -180,18 +220,12 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDelete = async (request: AccessRequest) => {
-    // Check if we have the auth user id stored in the 'code' field
-    if (!request.code) {
-      toast.error('Gagal menghapus: UID pengguna tidak ditemukan di data ini (Akun dibuat sebelum sistem auto-delete). Hapus manual via Supabase Dashboard.');
+  const handleDelete = async (user: RespondentUser) => {
+    if (!window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS PERMANEN akun ${user.name} (${user.email})? Seluruh akses login mereka akan dicabut seketika.`)) {
       return;
     }
 
-    if (!window.confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS PERMANEN akun ${request.name} (${request.email})? Seluruh akses login mereka akan dicabut seketika.`)) {
-      return;
-    }
-
-    setIsDeletingId(request.id);
+    setIsDeletingId(user.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sesi telah berakhir, silakan login ulang.');
@@ -203,15 +237,14 @@ export default function AdminUsers() {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          authUserId: request.code, // We stored the UID in the code column earlier
-          requestId: request.id
+          authUserId: user.id
         })
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Gagal menghapus akun');
 
-      setRequests(prev => prev.filter(r => r.id !== request.id));
+      setRespondentUsers(prev => prev.filter(u => u.id !== user.id));
       toast.success('Akun responden berhasil dihapus permanen!');
       
     } catch (error: any) {
@@ -408,52 +441,65 @@ export default function AdminUsers() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Kode Akses</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRequests
-                  .filter((r) => r.status === 'approved')
-                  .map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">{request.name}</TableCell>
-                      <TableCell>{request.email}</TableCell>
-                      <TableCell>
-                        <code className="bg-muted px-2 py-1 rounded font-mono text-sm">
-                          {request.code}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="success">Aktif (Responden)</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(request)}
-                            disabled={isDeletingId === request.id}
-                            title="Hapus Akun Permanen"
-                          >
-                            {isDeletingId === request.id ? (
-                               <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                               "Hapus"
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
+            {isLoadingUsers ? (
+              <div className="flex justify-center p-8">
+                <span className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : respondentUsers.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                Belum ada akun responden yang terdaftar.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nama</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Tanggal Bergabung</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {respondentUsers
+                    .filter((u) => 
+                      u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                      u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric', month: 'long', year: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="success">Aktif</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(user)}
+                              disabled={isDeletingId === user.id}
+                              title="Hapus Akun Permanen"
+                            >
+                              {isDeletingId === user.id ? (
+                                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                "Hapus"
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
