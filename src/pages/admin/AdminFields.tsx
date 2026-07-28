@@ -35,7 +35,6 @@ import {
   AlignLeft,
   List,
   FileUp,
-  CalendarPlus,
 } from 'lucide-react';
 
 const fieldTypeIcons = {
@@ -46,7 +45,7 @@ const fieldTypeIcons = {
   select: List,
   terbilang: Type,
   file: FileUp,
-  date_addition: CalendarPlus,
+  date_addition: Calendar,
 };
 
 const fieldTypeLabels = {
