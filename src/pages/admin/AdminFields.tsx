@@ -695,8 +695,12 @@ export default function AdminFields() {
                       <SelectContent>
                         <SelectItem value="angka">Angka Biasa (cth: Tiga Puluh)</SelectItem>
                         <SelectItem value="rupiah">Rupiah Currency (cth: Tiga Puluh Ribu Rupiah)</SelectItem>
-                        <SelectItem value="tanggal">Tanggal Terbilang (cth: Dua Puluh Empat Juli Dua Ribu Dua Puluh Enam)</SelectItem>
-                        <SelectItem value="tanggal_hari">Tanggal + Hari (cth: Rabu, Dua Puluh Empat Juli...)</SelectItem>
+                        <SelectItem value="tanggal">Tanggal Lengkap (cth: Dua Puluh Empat Juli...)</SelectItem>
+                        <SelectItem value="tanggal_hari">Tanggal Lengkap + Hari (cth: Rabu, Dua Puluh...)</SelectItem>
+                        <SelectItem value="hari_saja">Hari Saja (cth: Rabu)</SelectItem>
+                        <SelectItem value="tanggal_saja">Tanggal Saja (cth: Dua Puluh Empat)</SelectItem>
+                        <SelectItem value="bulan_saja">Bulan Saja (cth: Juli)</SelectItem>
+                        <SelectItem value="tahun_saja">Tahun Saja (cth: Dua Ribu Dua Puluh Enam)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

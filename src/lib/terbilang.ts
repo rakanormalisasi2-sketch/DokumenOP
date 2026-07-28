@@ -45,7 +45,7 @@ const HARI_INDONESIA = [
     'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
 ];
 
-export function formatTanggalTerbilang(dateString: string, includeDay: boolean = false): string {
+export function formatTanggalTerbilang(dateString: string, formatType: 'tanggal' | 'tanggal_hari' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'tanggal'): string {
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
@@ -60,18 +60,26 @@ export function formatTanggalTerbilang(dateString: string, includeDay: boolean =
     const tanggalTerbilang = angkaTerbilang(tanggal);
     const tahunTerbilang = angkaTerbilang(tahun);
 
-    if (includeDay) {
-        return `${hari}, ${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
+    switch (formatType) {
+        case 'hari_saja':
+            return hari;
+        case 'bulan_saja':
+            return bulan;
+        case 'tahun_saja':
+            return tahunTerbilang;
+        case 'tanggal_saja':
+            return tanggalTerbilang;
+        case 'tanggal_hari':
+            return `${hari}, ${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
+        case 'tanggal':
+        default:
+            return `${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
     }
-    return `${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
 }
 
-export function formatTerbilang(angkaOrDate: number | string, format: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' = 'angka'): string {
-    if (format === 'tanggal') {
-        return formatTanggalTerbilang(String(angkaOrDate), false);
-    }
-    if (format === 'tanggal_hari') {
-        return formatTanggalTerbilang(String(angkaOrDate), true);
+export function formatTerbilang(angkaOrDate: number | string, format: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'angka'): string {
+    if (['tanggal', 'tanggal_hari', 'hari_saja', 'bulan_saja', 'tahun_saja', 'tanggal_saja'].includes(format)) {
+        return formatTanggalTerbilang(String(angkaOrDate), format as any);
     }
 
     const rawValue = String(angkaOrDate).replace(/[^0-9]/g, ''); // strip non-numeric just in case
