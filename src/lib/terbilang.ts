@@ -36,8 +36,45 @@ export function angkaTerbilang(angka: number | string): string {
     return result.trim().replace(/\s+/g, ' ');
 }
 
-export function formatTerbilang(angka: number | string, format: 'angka' | 'rupiah' = 'angka'): string {
-    const rawValue = String(angka).replace(/[^0-9]/g, ''); // strip non-numeric just in case
+const BULAN_INDONESIA = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+const HARI_INDONESIA = [
+    'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
+];
+
+export function formatTanggalTerbilang(dateString: string, includeDay: boolean = false): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+
+    const hariIndex = date.getDay();
+    const hari = HARI_INDONESIA[hariIndex];
+    const tanggal = date.getDate();
+    const bulanIndex = date.getMonth();
+    const bulan = BULAN_INDONESIA[bulanIndex];
+    const tahun = date.getFullYear();
+
+    const tanggalTerbilang = angkaTerbilang(tanggal);
+    const tahunTerbilang = angkaTerbilang(tahun);
+
+    if (includeDay) {
+        return `${hari}, ${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
+    }
+    return `${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
+}
+
+export function formatTerbilang(angkaOrDate: number | string, format: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' = 'angka'): string {
+    if (format === 'tanggal') {
+        return formatTanggalTerbilang(String(angkaOrDate), false);
+    }
+    if (format === 'tanggal_hari') {
+        return formatTanggalTerbilang(String(angkaOrDate), true);
+    }
+
+    const rawValue = String(angkaOrDate).replace(/[^0-9]/g, ''); // strip non-numeric just in case
     if (!rawValue) return '';
 
     const parsedNumber = parseInt(rawValue, 10);

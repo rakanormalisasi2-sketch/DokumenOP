@@ -666,28 +666,28 @@ export default function AdminFields() {
               {formData.type === 'terbilang' && (
                 <div className="space-y-4 p-4 bg-muted/30 border rounded-lg mt-4">
                   <div className="space-y-2">
-                    <Label>Pilih Field Sumber (Angka)</Label>
+                    <Label>Pilih Field Sumber</Label>
                     <Select
                       value={formData.linkedFieldId}
                       onValueChange={(val) => setFormData({ ...formData, linkedFieldId: val })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Field Number..." />
+                        <SelectValue placeholder="Pilih Field Sumber..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {fields.filter(f => f.type === 'number').map(f => (
+                        {fields.filter(f => f.type === 'number' || (formData.terbilangFormat?.startsWith('tanggal') && f.type === 'date')).map(f => (
                           <SelectItem key={f.id} value={f.name}>{f.label} ({f.name})</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">Field ini akan diconvert secara otomatis menjadi ejaan teks</p>
+                    <p className="text-xs text-muted-foreground">Field ini akan diconvert secara otomatis menjadi ejaan teks angka, rupiah, atau tanggal</p>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Format Terbilang</Label>
                     <Select
                       value={formData.terbilangFormat}
-                      onValueChange={(val) => setFormData({ ...formData, terbilangFormat: val as 'angka' | 'rupiah' })}
+                      onValueChange={(val) => setFormData({ ...formData, terbilangFormat: val as 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -695,6 +695,8 @@ export default function AdminFields() {
                       <SelectContent>
                         <SelectItem value="angka">Angka Biasa (cth: Tiga Puluh)</SelectItem>
                         <SelectItem value="rupiah">Rupiah Currency (cth: Tiga Puluh Ribu Rupiah)</SelectItem>
+                        <SelectItem value="tanggal">Tanggal Terbilang (cth: Dua Puluh Empat Juli Dua Ribu Dua Puluh Enam)</SelectItem>
+                        <SelectItem value="tanggal_hari">Tanggal + Hari (cth: Rabu, Dua Puluh Empat Juli...)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

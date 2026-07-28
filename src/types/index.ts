@@ -64,7 +64,7 @@ export interface FormField {
   showInAdmin?: ('kak' | 'kontrak' | 'nota')[]; // Untuk persiapan (dokumen kontrak admin)
   // Khusus untuk type 'terbilang' & 'date_addition'
   linkedFieldId?: string; // Menyimpan ID field yang dirujuk
-  terbilangFormat?: 'angka' | 'rupiah'; // Format ejaan terbilang
+  terbilangFormat?: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari'; // Format ejaan terbilang
   dateAdditionDays?: number; // Jumlah hari yang ditambahkan
 }
 
