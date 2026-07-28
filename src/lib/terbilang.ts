@@ -45,7 +45,7 @@ const HARI_INDONESIA = [
     'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
 ];
 
-export function formatTanggalTerbilang(dateString: string, formatType: 'tanggal' | 'tanggal_hari' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'tanggal'): string {
+export function formatTanggalTerbilang(dateString: string, formatType: 'tanggal' | 'tanggal_hari' | 'tanggal_prefiks' | 'tanggal_hari_prefiks' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'tanggal'): string {
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
@@ -69,6 +69,10 @@ export function formatTanggalTerbilang(dateString: string, formatType: 'tanggal'
             return tahunTerbilang;
         case 'tanggal_saja':
             return tanggalTerbilang;
+        case 'tanggal_prefiks':
+            return `tanggal ${tanggalTerbilang} bulan ${bulan} tahun ${tahunTerbilang}`;
+        case 'tanggal_hari_prefiks':
+            return `hari ${hari} tanggal ${tanggalTerbilang} bulan ${bulan} tahun ${tahunTerbilang}`;
         case 'tanggal_hari':
             return `${hari}, ${tanggalTerbilang} ${bulan} ${tahunTerbilang}`;
         case 'tanggal':
@@ -77,8 +81,8 @@ export function formatTanggalTerbilang(dateString: string, formatType: 'tanggal'
     }
 }
 
-export function formatTerbilang(angkaOrDate: number | string, format: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'angka'): string {
-    if (['tanggal', 'tanggal_hari', 'hari_saja', 'bulan_saja', 'tahun_saja', 'tanggal_saja'].includes(format)) {
+export function formatTerbilang(angkaOrDate: number | string, format: 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' | 'tanggal_prefiks' | 'tanggal_hari_prefiks' | 'hari_saja' | 'bulan_saja' | 'tahun_saja' | 'tanggal_saja' = 'angka'): string {
+    if (['tanggal', 'tanggal_hari', 'tanggal_prefiks', 'tanggal_hari_prefiks', 'hari_saja', 'bulan_saja', 'tahun_saja', 'tanggal_saja'].includes(format)) {
         return formatTanggalTerbilang(String(angkaOrDate), format as any);
     }
 

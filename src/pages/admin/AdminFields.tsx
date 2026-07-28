@@ -697,6 +697,8 @@ export default function AdminFields() {
                         <SelectItem value="rupiah">Rupiah Currency (cth: Tiga Puluh Ribu Rupiah)</SelectItem>
                         <SelectItem value="tanggal">Tanggal Lengkap (cth: Dua Puluh Empat Juli...)</SelectItem>
                         <SelectItem value="tanggal_hari">Tanggal Lengkap + Hari (cth: Rabu, Dua Puluh...)</SelectItem>
+                        <SelectItem value="tanggal_prefiks">Tanggal + Prefiks (cth: tanggal Dua Puluh Empat bulan Juli...)</SelectItem>
+                        <SelectItem value="tanggal_hari_prefiks">Hari & Tanggal + Prefiks (cth: hari Rabu tanggal Dua Puluh...)</SelectItem>
                         <SelectItem value="hari_saja">Hari Saja (cth: Rabu)</SelectItem>
                         <SelectItem value="tanggal_saja">Tanggal Saja (cth: Dua Puluh Empat)</SelectItem>
                         <SelectItem value="bulan_saja">Bulan Saja (cth: Juli)</SelectItem>
