@@ -122,13 +122,13 @@ const SortableFieldItem = ({ field, onEdit, onDelete }: { field: FormField, onEd
             {field.phase === 'pelaksanaan' ? (
               <>
                 {field.showIn?.includes('awal') && (
-                  <span className="text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
-                    Dokumen Awal
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                    Persiapan
                   </span>
                 )}
                 {field.showIn?.includes('akhir') && (
-                  <span className="text-[10px] uppercase font-bold tracking-wider bg-secondary text-secondary-foreground px-2 py-0.5 rounded">
-                    Dokumen Akhir
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                    Pelaksanaan
                   </span>
                 )}
               </>
@@ -420,7 +420,7 @@ export default function AdminFields() {
                             }));
                           }}
                         />
-                        <Label htmlFor="showAwal" className="cursor-pointer">Dokumen Awal (Persiapan)</Label>
+                        <Label htmlFor="showAwal" className="cursor-pointer">Persiapan</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -435,7 +435,7 @@ export default function AdminFields() {
                             }));
                           }}
                         />
-                        <Label htmlFor="showAkhir" className="cursor-pointer">Dokumen Akhir (Pelaksanaan)</Label>
+                        <Label htmlFor="showAkhir" className="cursor-pointer">Pelaksanaan</Label>
                       </div>
                     </div>
                   </>
