@@ -304,7 +304,7 @@ export default function AdminFields() {
 
         {/* Add/Edit Dialog */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingField ? 'Edit Field' : 'Tambah Field Baru'}
