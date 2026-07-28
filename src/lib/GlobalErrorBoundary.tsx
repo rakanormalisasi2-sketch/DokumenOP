@@ -19,6 +19,21 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[GlobalErrorBoundary]', error, info.componentStack);
+    
+    // Auto-reload on chunk load error (Vercel deployment cache mismatch)
+    const isChunkLoadError = 
+      error?.name === 'ChunkLoadError' || 
+      error?.message?.includes('Failed to fetch dynamically imported module');
+      
+    if (isChunkLoadError) {
+      console.warn('Chunk load error detected, reloading page to fetch new assets...');
+      // Use sessionStorage to prevent infinite reload loop if the error persists
+      const reloadCount = parseInt(sessionStorage.getItem('chunkLoadReloadCount') || '0');
+      if (reloadCount < 2) {
+        sessionStorage.setItem('chunkLoadReloadCount', (reloadCount + 1).toString());
+        window.location.reload();
+      }
+    }
   }
 
   render() {
