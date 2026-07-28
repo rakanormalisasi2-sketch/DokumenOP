@@ -1,4 +1,21 @@
 import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useData } from '@/contexts/DataContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,8 +78,105 @@ const fieldTypeLabels = {
   date_addition: 'Penambahan Tanggal (Otomatis)',
 };
 
+const SortableFieldItem = ({ field, onEdit, onDelete }: { field: FormField, onEdit: (f: FormField) => void, onDelete: (id: string) => void }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: field.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+  const IconComponent = fieldTypeIcons[field.type as keyof typeof fieldTypeIcons];
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors group relative"
+    >
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="flex items-center justify-center cursor-grab active:cursor-grabbing p-2 -ml-2 text-muted-foreground hover:text-primary"
+      >
+        <GripVertical className="w-5 h-5" />
+      </div>
+
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10`}>
+        <IconComponent className="w-5 h-5 text-primary" />
+      </div>
+
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{field.label}</span>
+          {field.required && (
+            <span className="text-xs text-destructive">*</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+            {field.name}
+          </code>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {field.phase === 'pelaksanaan' ? (
+              <>
+                {field.showIn?.includes('awal') && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    Dokumen Awal
+                  </span>
+                )}
+                {field.showIn?.includes('akhir') && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-secondary text-secondary-foreground px-2 py-0.5 rounded">
+                    Dokumen Akhir
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {field.showInAdmin?.includes('kak') && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                    Buat KAK
+                  </span>
+                )}
+                {field.showInAdmin?.includes('kontrak') && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                    Buat Kontrak
+                  </span>
+                )}
+                {field.showInAdmin?.includes('nota') && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                    Buat Nota Dinas
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 top-1/2 -translate-y-1/2 bg-muted/50 p-1 rounded-md shadow-sm">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit(field)}
+        >
+          <Edit3 className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive"
+          onClick={() => onDelete(field.id)}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminFields() {
-  const { fields, addField, updateField, deleteField, updateFieldOrder } = useData();
+  const { fields, addField, updateField, deleteField, reorderFields } = useData();
   const [showDialog, setShowDialog] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [activeTab, setActiveTab] = useState<'persiapan' | 'pelaksanaan'>('pelaksanaan');
@@ -153,9 +267,26 @@ export default function AdminFields() {
       .replace(/^_|_$/g, '');
   };
 
-  // Helper to render field list
   const FieldList = ({ currentPhase }: { currentPhase: 'persiapan' | 'pelaksanaan' }) => {
     const filteredFields = fields.filter(f => f.phase === currentPhase);
+
+    const sensors = useSensors(
+      useSensor(PointerSensor),
+      useSensor(KeyboardSensor, {
+        coordinateGetter: sortableKeyboardCoordinates,
+      })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (over && active.id !== over.id) {
+        const oldIndex = filteredFields.findIndex((f) => f.id === active.id);
+        const newIndex = filteredFields.findIndex((f) => f.id === over.id);
+        const reordered = arrayMove(filteredFields, oldIndex, newIndex);
+        reorderFields(reordered);
+      }
+    };
 
     if (filteredFields.length === 0) {
       return (
@@ -167,119 +298,27 @@ export default function AdminFields() {
     }
 
     return (
-      <div className="space-y-2">
-        {filteredFields.map((field, index) => {
-          const IconComponent = fieldTypeIcons[field.type];
-          return (
-            <div
-              key={field.id}
-              className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors group"
-            >
-              <div className="flex flex-col items-center">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 text-muted-foreground hover:text-primary"
-                  onClick={() => {
-                    if (index > 0) {
-                      const fieldAbove = filteredFields[index - 1];
-                      updateFieldOrder(field.id, fieldAbove.order, fieldAbove.id, field.order);
-                    }
-                  }}
-                  disabled={index === 0}
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <GripVertical className="w-4 h-4 text-muted-foreground/30" />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 text-muted-foreground hover:text-primary"
-                  onClick={() => {
-                    if (index < filteredFields.length - 1) {
-                      const fieldBelow = filteredFields[index + 1];
-                      updateFieldOrder(field.id, fieldBelow.order, fieldBelow.id, field.order);
-                    }
-                  }}
-                  disabled={index === filteredFields.length - 1}
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10`}>
-                <IconComponent className="w-5 h-5 text-primary" />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{field.label}</span>
-                  {field.required && (
-                    <span className="text-xs text-destructive">*</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                    {field.name}
-                  </code>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {field.phase === 'pelaksanaan' ? (
-                      <>
-                        {field.showIn?.includes('awal') && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
-                            Dokumen Awal
-                          </span>
-                        )}
-                        {field.showIn?.includes('akhir') && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider bg-secondary text-secondary-foreground px-2 py-0.5 rounded">
-                            Dokumen Akhir
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {field.showInAdmin?.includes('kak') && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-                            Buat KAK
-                          </span>
-                        )}
-                        {field.showInAdmin?.includes('kontrak') && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                            Buat Kontrak
-                          </span>
-                        )}
-                        {field.showInAdmin?.includes('nota') && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                            Buat Nota Dinas
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(field)}
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(field.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext 
+          items={filteredFields.map(f => f.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {filteredFields.map((field) => (
+              <SortableFieldItem 
+                key={field.id} 
+                field={field} 
+                onEdit={handleEdit} 
+                onDelete={handleDelete} 
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     );
   };
 

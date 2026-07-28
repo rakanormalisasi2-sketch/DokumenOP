@@ -16,6 +16,7 @@ interface DataContextType {
   addField: (field: Omit<FormField, 'id' | 'order'>) => void;
   updateField: (id: string, field: Partial<FormField>) => void;
   updateFieldOrder: (id1: string, order1: number, id2: string, order2: number) => void;
+  reorderFields: (newOrderedList: FormField[]) => void;
   deleteField: (id: string) => void;
   addSubmission: (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateSubmission: (id: string, data: Partial<Submission>) => void;
@@ -417,6 +418,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const reorderFields = useCallback(async (reorderedFields: FormField[]) => {
+    setFields((prev) => {
+      const original = prev;
+      const newOrders = new Map(reorderedFields.map((f, i) => [f.id, i + 1]));
+      
+      const next = prev.map(f => {
+        if (newOrders.has(f.id)) {
+          return { ...f, order: newOrders.get(f.id)! };
+        }
+        return f;
+      }).sort((a, b) => a.order - b.order);
+
+      const updates = reorderedFields.map((f, i) => 
+        supabase.from('app_fields').update({ item_order: i + 1 }).eq('id', f.id)
+      );
+
+      Promise.all(updates).then(results => {
+        const error = results.find(r => r.error)?.error;
+        if (error) {
+           console.error('Reorder Fields Error:', error);
+           toast.error('Gagal menyimpan urutan baru');
+           setFields(original);
+        }
+      });
+      
+      return next;
+    });
+  }, []);
+
   const deleteField = useCallback(async (id: string) => {
     setFields((prev) => {
       const original = prev;
@@ -607,7 +637,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value: DataContextType = {
     fields, submissions, templates, accessRequests,
-    addField, updateField, updateFieldOrder, deleteField,
+    addField, updateField, updateFieldOrder, reorderFields, deleteField,
     addSubmission, updateSubmission, updateSubmissionStatus, deleteSubmission, getSubmissionsByRespondent,
     addTemplate, updateTemplate, updateTemplateMeta, removeTemplate,
     addErrorReport, resolveErrorReport, getErrorReports,
