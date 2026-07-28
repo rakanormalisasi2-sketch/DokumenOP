@@ -35,6 +35,7 @@ import {
   AlignLeft,
   List,
   FileUp,
+  CalendarPlus,
 } from 'lucide-react';
 
 const fieldTypeIcons = {
@@ -45,6 +46,7 @@ const fieldTypeIcons = {
   select: List,
   terbilang: Type,
   file: FileUp,
+  date_addition: CalendarPlus,
 };
 
 const fieldTypeLabels = {
@@ -55,6 +57,7 @@ const fieldTypeLabels = {
   select: 'Pilihan',
   terbilang: 'Terbilang (Teks Ejaan Angka)',
   file: 'File Upload (Cloudflare R2)',
+  date_addition: 'Penambahan Tanggal (Otomatis)',
 };
 
 export default function AdminFields() {
