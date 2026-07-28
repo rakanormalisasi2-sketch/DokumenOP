@@ -121,7 +121,13 @@ export default function RespondentProjectDetail() {
     // Validate required fields
     const fieldsToCheck = phase === 'persiapan' ? persiapanFields : pelaksanaanFields;
     const missingFields = fieldsToCheck
-      .filter((f) => f.required && !formData[f.name])
+      .filter((f) => {
+        if (!f.required) return false;
+        const value = formData[f.name];
+        if (value === undefined || value === null) return true;
+        if (typeof value === 'string' && value.trim() === '') return true;
+        return false;
+      })
       .map((f) => f.label);
 
     if (phase === 'persiapan' && !companyProfile) {
