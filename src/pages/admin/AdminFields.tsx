@@ -77,6 +77,7 @@ export default function AdminFields() {
     linkedFieldId: '',
     terbilangFormat: 'angka' as 'angka' | 'rupiah',
     dateAdditionDays: 0,
+    options: [],
   });
 
   const resetForm = () => {
@@ -94,6 +95,7 @@ export default function AdminFields() {
       linkedFieldId: '',
       terbilangFormat: 'angka',
       dateAdditionDays: 0,
+      options: [],
     });
     setEditingField(null);
   };
@@ -119,6 +121,7 @@ export default function AdminFields() {
       linkedFieldId: field.linkedFieldId || '',
       terbilangFormat: field.terbilangFormat || 'angka',
       dateAdditionDays: field.dateAdditionDays || 0,
+      options: field.options || [],
     });
     setShowDialog(true);
   };
@@ -478,15 +481,52 @@ export default function AdminFields() {
                     <p className="text-xs text-muted-foreground">Field ini akan menjadi patokan tanggal awalnya</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Jumlah Hari Penambahan</Label>
-                    <Input
-                      type="number"
-                      placeholder="contoh: 90"
-                      value={formData.dateAdditionDays || ''}
-                      onChange={(e) => setFormData({ ...formData, dateAdditionDays: parseInt(e.target.value) || 0 })}
-                    />
-                    <p className="text-xs text-muted-foreground">Isi berapa hari yang akan ditambahkan ke field sumber</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 border p-3 rounded-lg bg-background">
+                      <Switch 
+                        id="dynamicDays" 
+                        checked={formData.options && formData.options.length > 0 && formData.options[0] !== ''}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFormData({ ...formData, options: [''], dateAdditionDays: 0 });
+                          } else {
+                            setFormData({ ...formData, options: [] });
+                          }
+                        }}
+                      />
+                      <Label htmlFor="dynamicDays" className="cursor-pointer font-medium">Ambil jumlah hari dari Field Angka</Label>
+                    </div>
+
+                    {formData.options && formData.options.length > 0 ? (
+                      <div className="space-y-2 p-3 bg-background border rounded-lg">
+                        <Label>Pilih Field Sumber (Angka)</Label>
+                        <Select
+                          value={formData.options[0]}
+                          onValueChange={(val) => setFormData({ ...formData, options: [val] })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih Field Angka..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fields.filter(f => f.type === 'number').map(f => (
+                              <SelectItem key={f.id} value={f.name}>{f.label} ({f.name})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Jumlah hari akan mengikuti angka yang diisi pada field ini</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 p-3 bg-background border rounded-lg">
+                        <Label>Jumlah Hari Penambahan Statis</Label>
+                        <Input
+                          type="number"
+                          placeholder="contoh: 90"
+                          value={formData.dateAdditionDays || ''}
+                          onChange={(e) => setFormData({ ...formData, dateAdditionDays: parseInt(e.target.value) || 0 })}
+                        />
+                        <p className="text-xs text-muted-foreground">Isi angka pasti berapa hari yang akan ditambahkan ke field sumber</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

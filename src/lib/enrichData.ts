@@ -31,7 +31,17 @@ export function enrichSubmissionData(data: Record<string, any>, fields: FormFiel
             try {
                 const baseDate = new Date(enrichedData[f.linkedFieldId]);
                 if (!isNaN(baseDate.getTime())) {
-                    const additionDays = f.dateAdditionDays || 0;
+                    let additionDays = f.dateAdditionDays || 0;
+                    
+                    // Jika menggunakan field angka dinamis, tarik nilainya
+                    if (f.options && f.options.length > 0 && f.options[0]) {
+                        const sourceNumberField = f.options[0];
+                        const dynamicDays = parseInt(enrichedData[sourceNumberField]);
+                        if (!isNaN(dynamicDays)) {
+                            additionDays = dynamicDays;
+                        }
+                    }
+
                     const calculatedDate = addDays(baseDate, additionDays);
                     
                     // We store the RAW date in case it's used elsewhere
