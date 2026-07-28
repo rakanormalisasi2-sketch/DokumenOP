@@ -35,6 +35,8 @@ import {
   AlignLeft,
   List,
   FileUp,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 
 const fieldTypeIcons = {
@@ -60,7 +62,7 @@ const fieldTypeLabels = {
 };
 
 export default function AdminFields() {
-  const { fields, addField, updateField, deleteField } = useData();
+  const { fields, addField, updateField, deleteField, updateFieldOrder } = useData();
   const [showDialog, setShowDialog] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const [activeTab, setActiveTab] = useState<'persiapan' | 'pelaksanaan'>('pelaksanaan');
@@ -166,14 +168,44 @@ export default function AdminFields() {
 
     return (
       <div className="space-y-2">
-        {filteredFields.map((field) => {
+        {filteredFields.map((field, index) => {
           const IconComponent = fieldTypeIcons[field.type];
           return (
             <div
               key={field.id}
               className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors group"
             >
-              <GripVertical className="w-5 h-5 text-muted-foreground cursor-move" />
+              <div className="flex flex-col items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 text-muted-foreground hover:text-primary"
+                  onClick={() => {
+                    if (index > 0) {
+                      const fieldAbove = filteredFields[index - 1];
+                      updateFieldOrder(field.id, fieldAbove.order, fieldAbove.id, field.order);
+                    }
+                  }}
+                  disabled={index === 0}
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <GripVertical className="w-4 h-4 text-muted-foreground/30" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 text-muted-foreground hover:text-primary"
+                  onClick={() => {
+                    if (index < filteredFields.length - 1) {
+                      const fieldBelow = filteredFields[index + 1];
+                      updateFieldOrder(field.id, fieldBelow.order, fieldBelow.id, field.order);
+                    }
+                  }}
+                  disabled={index === filteredFields.length - 1}
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </div>
 
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10`}>
                 <IconComponent className="w-5 h-5 text-primary" />
@@ -411,6 +443,37 @@ export default function AdminFields() {
                     </div>
                   </>
                 )}
+              </div>
+              
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+                <Label className="text-base font-semibold">Diisi Oleh:</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Tentukan siapa yang akan mengisi field ini saat membuat dokumen.
+                </p>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="filledAdmin" 
+                      name="filledBy" 
+                      checked={formData.filledBy === 'admin'}
+                      onChange={() => setFormData({...formData, filledBy: 'admin'})} 
+                      className="cursor-pointer"
+                    />
+                    <Label htmlFor="filledAdmin" className="cursor-pointer">Admin / PPK</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="filledRespondent" 
+                      name="filledBy" 
+                      checked={formData.filledBy === 'respondent'}
+                      onChange={() => setFormData({...formData, filledBy: 'respondent'})} 
+                      className="cursor-pointer"
+                    />
+                    <Label htmlFor="filledRespondent" className="cursor-pointer">Responden (Penyedia)</Label>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

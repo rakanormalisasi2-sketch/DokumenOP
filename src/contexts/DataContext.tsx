@@ -15,6 +15,7 @@ interface DataContextType {
 
   addField: (field: Omit<FormField, 'id' | 'order'>) => void;
   updateField: (id: string, field: Partial<FormField>) => void;
+  updateFieldOrder: (id1: string, order1: number, id2: string, order2: number) => void;
   deleteField: (id: string) => void;
   addSubmission: (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateSubmission: (id: string, data: Partial<Submission>) => void;
@@ -392,6 +393,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateFieldOrder = useCallback(async (id1: string, order1: number, id2: string, order2: number) => {
+    setFields((prev) => {
+      const original = prev;
+      const next = prev.map(f => {
+        if (f.id === id1) return { ...f, order: order1 };
+        if (f.id === id2) return { ...f, order: order2 };
+        return f;
+      }).sort((a, b) => a.order - b.order); // Keep it sorted locally
+
+      Promise.all([
+        supabase.from('app_fields').update({ item_order: order1 }).eq('id', id1),
+        supabase.from('app_fields').update({ item_order: order2 }).eq('id', id2)
+      ]).then((results) => {
+        const error = results.find(r => r.error)?.error;
+        if (error) {
+          console.error('Update Field Order Error:', error);
+          toast.error(`Gagal merubah urutan: ${error.message}`);
+          setFields(original);
+        }
+      });
+      return next;
+    });
+  }, []);
+
   const deleteField = useCallback(async (id: string) => {
     setFields((prev) => {
       const original = prev;
@@ -582,7 +607,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value: DataContextType = {
     fields, submissions, templates, accessRequests,
-    addField, updateField, deleteField,
+    addField, updateField, updateFieldOrder, deleteField,
     addSubmission, updateSubmission, updateSubmissionStatus, deleteSubmission, getSubmissionsByRespondent,
     addTemplate, updateTemplate, updateTemplateMeta, removeTemplate,
     addErrorReport, resolveErrorReport, getErrorReports,
