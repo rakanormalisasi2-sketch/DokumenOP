@@ -190,7 +190,6 @@ export default function AdminFields() {
   const { fields, addField, updateField, deleteField, reorderFields } = useData();
   const [showDialog, setShowDialog] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
-  const [activeTab, setActiveTab] = useState<'persiapan' | 'pelaksanaan'>('pelaksanaan');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -199,8 +198,8 @@ export default function AdminFields() {
     placeholder: '',
     required: true,
     visibleTo: 'both' as 'both' | 'admin' | 'respondent',
-    filledBy: activeTab === 'persiapan' ? 'admin' : 'respondent' as 'admin' | 'respondent',
-    phase: activeTab,
+    filledBy: 'respondent' as 'admin' | 'respondent',
+    phase: 'pelaksanaan' as 'persiapan' | 'pelaksanaan',
     showIn: ['awal', 'akhir'] as ('awal' | 'akhir' | 'fisik' | 'konsultansi')[],
     showInAdmin: ['kak', 'kontrak', 'nota'] as ('kak' | 'kontrak' | 'nota')[],
     linkedFieldId: '',
@@ -217,8 +216,8 @@ export default function AdminFields() {
       placeholder: '',
       required: true,
       visibleTo: 'both',
-      filledBy: activeTab === 'persiapan' ? 'admin' : 'respondent',
-      phase: activeTab,
+      filledBy: 'respondent',
+      phase: 'pelaksanaan',
       showIn: ['awal', 'akhir'],
       showInAdmin: ['kak', 'kontrak', 'nota'],
       linkedFieldId: '',
@@ -278,8 +277,8 @@ export default function AdminFields() {
       .replace(/^_|_$/g, '');
   };
 
-  const FieldList = ({ currentPhase }: { currentPhase: 'persiapan' | 'pelaksanaan' }) => {
-    const filteredFields = fields.filter(f => f.phase === currentPhase);
+  const FieldList = () => {
+    const filteredFields = fields;
 
     const sensors = useSensors(
       useSensor(PointerSensor),
@@ -302,8 +301,8 @@ export default function AdminFields() {
     if (filteredFields.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-          <p>Belum ada field yang ditambahkan untuk dokumen {currentPhase}.</p>
-          <Button variant="link" onClick={() => { setActiveTab(currentPhase); handleAdd(); }}>Tambah Field Baru</Button>
+          <p>Belum ada field yang ditambahkan.</p>
+          <Button variant="link" onClick={() => handleAdd()}>Tambah Field Baru</Button>
         </div>
       );
     }
@@ -351,40 +350,18 @@ export default function AdminFields() {
         </div>
 
         {/* Fields List */}
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'persiapan' | 'pelaksanaan')}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="persiapan">Dokumen Persiapan</TabsTrigger>
-            <TabsTrigger value="pelaksanaan">Dokumen Pelaksanaan</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="persiapan">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Field Dokumen Persiapan</CardTitle>
-                <CardDescription>
-                  Field yang eksklusif diisi oleh Admin pada menu Buat Dokumen Kontrak. Field ini tidak akan muncul pada form responden.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FieldList currentPhase="persiapan" />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="pelaksanaan">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Field Dokumen Pelaksanaan</CardTitle>
-                <CardDescription>
-                  Field yang diisi oleh responden pada fase Dokumen Awal dan Dokumen Akhir.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FieldList currentPhase="pelaksanaan" />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Fields List */}
+        <Card className="shadow-card mt-6">
+          <CardHeader>
+            <CardTitle>Daftar Field Form</CardTitle>
+            <CardDescription>
+              Semua field yang tersedia. Tarik dan geser (drag & drop) untuk mengatur urutan. Gunakan centang Persiapan/Pelaksanaan saat mengedit field untuk menempatkannya pada tab responden yang sesuai.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldList />
+          </CardContent>
+        </Card>
 
         {/* Add/Edit Dialog */}
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
