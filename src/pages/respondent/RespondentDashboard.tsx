@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import RespondentLayout from '@/components/layout/RespondentLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DocumentType, Submission } from '@/types';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
   Clock,
@@ -22,6 +23,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -37,12 +40,64 @@ import { toast } from 'sonner';
 
 export default function RespondentDashboard() {
   const { user } = useAuth();
-  const { submissions, templates, fields, addErrorReport } = useData();
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [printSubmission, setPrintSubmission] = useState<Submission | null>(null);
   const [previewType, setPreviewType] = useState<DocumentType | null>(null);
   const [showAnnotator, setShowAnnotator] = useState(false);
+  const navigate = useNavigate();
+  const { submissions, templates, fields, addSubmission, addErrorReport } = useData();
+
+  // New Project State
+  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectCategory, setNewProjectCategory] = useState<'fisik' | 'konsultansi'>('fisik');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectName.trim()) {
+      toast.error('Nama pekerjaan wajib diisi');
+      return;
+    }
+    
+    setIsCreatingProject(true);
+    try {
+      // create a mock object or real object for unified project
+      const newSubmission = {
+        respondentId: user?.id || 'demo-respondent',
+        respondentName: user?.name || 'Responden',
+        status: 'draft' as any,
+        submissionPhase: 'awal' as any,
+        workCategory: newProjectCategory,
+        data: {
+          nama_pekerjaan: newProjectName,
+          _status_persiapan: 'draft',
+          _status_pelaksanaan: 'draft'
+        }
+      };
+      
+      // We need the ID to navigate, but addSubmission is async and doesn't return ID directly.
+      // However, addSubmission generates UUID and adds it.
+      // Wait, let's just generate UUID here if possible or let addSubmission do it and we find it by sorting.
+      // To keep it simple, we just navigate to /respondent after adding, or modify addSubmission to return ID.
+      // Let's modify addSubmission to return the ID.
+      const id = await addSubmission(newSubmission);
+      toast.success('Pekerjaan berhasil dibuat');
+      setShowNewProjectDialog(false);
+      setNewProjectName('');
+      if (id) {
+        navigate(`/respondent/pekerjaan/${id}`);
+      } else {
+        // Fallback
+        setTimeout(() => window.location.reload(), 500);
+      }
+    } catch (err) {
+      toast.error('Gagal membuat pekerjaan');
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
 
   // Password change state
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
@@ -127,14 +182,54 @@ export default function RespondentDashboard() {
             <span>Ubah Password</span>
           </button>
           
-          <Link to="/respondent/dokumen-awal" className="w-full sm:w-auto">
-            <button className="bg-secondary text-on-secondary font-label-md text-sm px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-on-secondary-fixed-variant transition-colors shadow-sm w-full justify-center">
-              <FileText className="w-5 h-5" />
-              <span>Buat Pengajuan Baru</span>
-            </button>
-          </Link>
+          <button 
+            onClick={() => setShowNewProjectDialog(true)}
+            className="bg-secondary text-on-secondary font-label-md text-sm px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-on-secondary-fixed-variant transition-colors shadow-sm w-full sm:w-auto justify-center"
+          >
+            <FileText className="w-5 h-5" />
+            <span>Buat Pekerjaan Baru</span>
+          </button>
         </div>
       </div>
+
+      <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Buat Pekerjaan Baru</DialogTitle>
+            <DialogDescription>
+              Masukkan detail dasar pekerjaan. Anda bisa mengisi form secara bertahap nanti.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateProject} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="nama_pekerjaan">Nama Pekerjaan</Label>
+              <Input 
+                id="nama_pekerjaan" 
+                value={newProjectName} 
+                onChange={(e) => setNewProjectName(e.target.value)} 
+                placeholder="Contoh: Pembangunan Jalan Tol"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="work_category">Kategori Pekerjaan</Label>
+              <select 
+                id="work_category"
+                value={newProjectCategory}
+                onChange={(e) => setNewProjectCategory(e.target.value as 'fisik' | 'konsultansi')}
+                className="w-full flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
+                <option value="fisik">Fisik</option>
+                <option value="konsultansi">Konsultansi</option>
+              </select>
+            </div>
+            <div className="flex justify-end pt-4">
+              <Button type="submit" disabled={isCreatingProject}>Buat Pekerjaan</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -242,13 +337,14 @@ export default function RespondentDashboard() {
                       <StatusBadge status={submission.status} />
                     </td>
                     <td className="py-4 px-6 flex justify-end space-x-2">
-                      <button 
-                        onClick={() => setSelectedSubmission(submission)}
-                        className="p-2 text-secondary hover:bg-secondary-container/20 rounded-lg transition-colors border border-transparent"
-                        title="Lihat Detail"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <Link to={`/respondent/pekerjaan/${submission.id}`}>
+                        <button 
+                          className="p-2 text-secondary hover:bg-secondary-container/20 rounded-lg transition-colors border border-transparent"
+                          title="Lihat Pekerjaan"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </Link>
                       {submission.status === 'revision' && (
                         <button className="bg-surface-container-lowest border border-outline-variant text-secondary px-4 py-2 rounded-lg font-label-md text-[13px] hover:bg-surface-container-low transition-colors">
                           Lihat Catatan

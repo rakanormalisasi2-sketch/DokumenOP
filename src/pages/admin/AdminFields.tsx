@@ -41,6 +41,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Plus,
   Edit3,
@@ -150,6 +151,16 @@ const SortableFieldItem = ({ field, onEdit, onDelete }: { field: FormField, onEd
                 )}
               </>
             )}
+            {field.showIn?.includes('fisik') && !field.showIn?.includes('konsultansi') && (
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                Khusus Fisik
+              </span>
+            )}
+            {field.showIn?.includes('konsultansi') && !field.showIn?.includes('fisik') && (
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-teal-100 text-teal-700 px-2 py-0.5 rounded">
+                Khusus Konsultansi
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -190,7 +201,7 @@ export default function AdminFields() {
     visibleTo: 'both' as 'both' | 'admin' | 'respondent',
     filledBy: activeTab === 'persiapan' ? 'admin' : 'respondent' as 'admin' | 'respondent',
     phase: activeTab,
-    showIn: ['awal', 'akhir'] as ('awal' | 'akhir')[],
+    showIn: ['awal', 'akhir'] as ('awal' | 'akhir' | 'fisik' | 'konsultansi')[],
     showInAdmin: ['kak', 'kontrak', 'nota'] as ('kak' | 'kontrak' | 'nota')[],
     linkedFieldId: '',
     terbilangFormat: 'angka' as 'angka' | 'rupiah',
@@ -409,7 +420,7 @@ export default function AdminFields() {
                             }));
                           }}
                         />
-                        <Label htmlFor="showAwal" className="cursor-pointer">Dokumen Awal</Label>
+                        <Label htmlFor="showAwal" className="cursor-pointer">Dokumen Awal (Persiapan)</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox
@@ -424,7 +435,7 @@ export default function AdminFields() {
                             }));
                           }}
                         />
-                        <Label htmlFor="showAkhir" className="cursor-pointer">Dokumen Akhir</Label>
+                        <Label htmlFor="showAkhir" className="cursor-pointer">Dokumen Akhir (Pelaksanaan)</Label>
                       </div>
                     </div>
                   </>
@@ -482,6 +493,46 @@ export default function AdminFields() {
                     </div>
                   </>
                 )}
+              </div>
+
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+                <Label className="text-base font-semibold">Kategori Pekerjaan (Opsional)</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Atur apakah field ini hanya berlaku untuk jenis pekerjaan tertentu.
+                </p>
+                <RadioGroup 
+                  value={
+                    formData.showIn.includes('fisik') && !formData.showIn.includes('konsultansi') ? 'fisik' :
+                    formData.showIn.includes('konsultansi') && !formData.showIn.includes('fisik') ? 'konsultansi' : 'semua'
+                  }
+                  onValueChange={(val) => {
+                    setFormData(prev => {
+                      // Hapus 'fisik' dan 'konsultansi' dari array lama
+                      const cleanShowIn = prev.showIn.filter(p => p !== 'fisik' && p !== 'konsultansi');
+                      if (val === 'fisik') {
+                        return { ...prev, showIn: [...cleanShowIn, 'fisik'] };
+                      } else if (val === 'konsultansi') {
+                        return { ...prev, showIn: [...cleanShowIn, 'konsultansi'] };
+                      } else {
+                        return { ...prev, showIn: cleanShowIn }; // 'semua'
+                      }
+                    });
+                  }}
+                  className="flex flex-col space-y-1 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="semua" id="kat-semua" />
+                    <Label htmlFor="kat-semua" className="cursor-pointer">Berlaku untuk Semua</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="fisik" id="kat-fisik" />
+                    <Label htmlFor="kat-fisik" className="cursor-pointer text-orange-600">Khusus Fisik Saja</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="konsultansi" id="kat-konsul" />
+                    <Label htmlFor="kat-konsul" className="cursor-pointer text-teal-600">Khusus Konsultansi Saja</Label>
+                  </div>
+                </RadioGroup>
               </div>
               
               <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">

@@ -18,9 +18,9 @@ interface DataContextType {
   updateFieldOrder: (id1: string, order1: number, id2: string, order2: number) => void;
   reorderFields: (newOrderedList: FormField[]) => void;
   deleteField: (id: string) => void;
-  addSubmission: (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addSubmission: (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateSubmission: (id: string, data: Partial<Submission>) => void;
-  updateSubmissionStatus: (id: string, status: DocumentStatus, feedback?: string) => void;
+  updateSubmissionStatus: (id: string, status: DocumentStatus, feedback?: string, phase?: 'persiapan' | 'pelaksanaan' | 'general') => void;
   deleteSubmission: (id: string) => void;
   getSubmissionsByRespondent: (respondentId: string) => Submission[];
   addTemplate: (template: Omit<DocumentTemplate, 'id' | 'lastUpdated'>) => void;
@@ -187,7 +187,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             errorReports: s.error_reports,
             documentDates: s.document_dates,
             companyProfile: s.company_profile,
-            contractFile: s.contract_file
+            contractFile: s.contract_file,
+            statusPersiapan: s.data?._status_persiapan || 'draft',
+            statusPelaksanaan: s.data?._status_pelaksanaan || 'draft'
           })) as Submission[];
           setSubmissions(parsed);
         }
@@ -259,6 +261,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSubmissions(data.map((s: any) => ({
           ...s, respondentId: s.respondent_id, respondentName: s.respondent_name,
           submissionPhase: s.submission_phase, documentType: s.document_type,
+          statusPersiapan: s.data?._status_persiapan || 'draft',
+          statusPelaksanaan: s.data?._status_pelaksanaan || 'draft',
           workCategory: s.work_category, adminFeedback: s.admin_feedback,
           documentDate: s.document_date, createdAt: new Date(s.created_at),
           updatedAt: new Date(s.updated_at), kakType: s.kak_type,
@@ -468,23 +472,53 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addSubmission = useCallback(async (submission: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>) => {
     const id = crypto.randomUUID();
+    
+    // Ensure the data has the internal statuses for unified project flow
+    const dataWithStatuses = {
+      ...submission.data,
+      _status_persiapan: submission.data?._status_persiapan || 'draft',
+      _status_pelaksanaan: submission.data?._status_pelaksanaan || 'draft'
+    };
+
     const newSubmission: Submission = {
-      ...submission, id, createdAt: new Date(), updatedAt: new Date(),
+      ...submission,
+      id,
+      data: dataWithStatuses,
+      statusPersiapan: dataWithStatuses._status_persiapan,
+      statusPelaksanaan: dataWithStatuses._status_pelaksanaan,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     setSubmissions((prev) => [...prev, newSubmission]);
 
     await supabase.from('submissions').insert({
       id, respondent_id: submission.respondentId, respondent_name: submission.respondentName,
       submission_phase: submission.submissionPhase, status: submission.status,
-      data: submission.data, document_type: submission.documentType, work_category: submission.workCategory,
+      data: dataWithStatuses, document_type: submission.documentType, work_category: submission.workCategory,
       kak_type: submission.kakType, durasi_pelaksanaan: submission.durasiPelaksanaan,
       company_profile: submission.companyProfile, contract_file: submission.contractFile,
       created_at: newSubmission.createdAt.toISOString(), updated_at: newSubmission.updatedAt.toISOString()
     });
+
+    return id;
   }, []);
 
   const updateSubmission = useCallback(async (id: string, data: Partial<Submission>) => {
-    setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, ...data, updatedAt: new Date() } : s));
+    setSubmissions((prev) => prev.map((s) => {
+      if (s.id === id) {
+        // Automatically sync virtual statuses if data changes
+        const statusPersiapan = data.data?._status_persiapan || s.data?._status_persiapan || 'draft';
+        const statusPelaksanaan = data.data?._status_pelaksanaan || s.data?._status_pelaksanaan || 'draft';
+        return { 
+          ...s, 
+          ...data,
+          statusPersiapan,
+          statusPelaksanaan,
+          updatedAt: new Date() 
+        };
+      }
+      return s;
+    }));
     
     const updates: any = { updated_at: new Date().toISOString() };
     if (data.status !== undefined) updates.status = data.status;
@@ -497,13 +531,78 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (data.schedulePhases !== undefined) updates.schedule_phases = data.schedulePhases;
     if (data.lampiranBaphpItems !== undefined) updates.lampiran_baphp_items = data.lampiranBaphpItems;
     if (data.documentDates !== undefined) updates.document_dates = data.documentDates;
+    if (data.companyProfile !== undefined) updates.company_profile = data.companyProfile;
+    if (data.workCategory !== undefined) updates.work_category = data.workCategory;
+    if (data.kakType !== undefined) updates.kak_type = data.kakType;
+    if (data.durasiPelaksanaan !== undefined) updates.durasi_pelaksanaan = data.durasiPelaksanaan;
+
+    // Sync statusPersiapan/statusPelaksanaan into data JSON for persistence
+    if (data.statusPersiapan !== undefined && !data.data) {
+      const currentSub = submissions.find(s => s.id === id);
+      if (currentSub) {
+        updates.data = { ...currentSub.data, _status_persiapan: data.statusPersiapan };
+      }
+    }
+    if (data.statusPelaksanaan !== undefined && !data.data) {
+      const currentSub = submissions.find(s => s.id === id);
+      if (currentSub) {
+        updates.data = { ...(updates.data || currentSub.data), _status_pelaksanaan: data.statusPelaksanaan };
+      }
+    }
 
     await supabase.from('submissions').update(updates).eq('id', id);
   }, []);
 
-  const updateSubmissionStatus = useCallback((id: string, status: DocumentStatus, feedback?: string) => {
-    updateSubmission(id, { status, adminFeedback: feedback });
-  }, [updateSubmission]);
+  const updateSubmissionStatus = useCallback(async (
+    id: string, 
+    status: DocumentStatus, 
+    feedback?: string,
+    phase: 'persiapan' | 'pelaksanaan' | 'general' = 'general'
+  ) => {
+    const originalSubmissions = submissions;
+    
+    setSubmissions((prev) => prev.map((s) => {
+      if (s.id === id) {
+        const newData = { ...s.data };
+        if (phase === 'persiapan') newData._status_persiapan = status;
+        if (phase === 'pelaksanaan') newData._status_pelaksanaan = status;
+
+        return { 
+          ...s, 
+          status: phase === 'general' ? status : s.status, 
+          statusPersiapan: phase === 'persiapan' ? status : s.statusPersiapan,
+          statusPelaksanaan: phase === 'pelaksanaan' ? status : s.statusPelaksanaan,
+          adminFeedback: feedback, 
+          data: newData,
+          updatedAt: new Date() 
+        };
+      }
+      return s;
+    }));
+
+    const updatePayload: any = { admin_feedback: feedback, updated_at: new Date().toISOString() };
+    if (phase === 'general') updatePayload.status = status;
+
+    // We also need to get the existing data from the store to update it fully
+    const sub = submissions.find(s => s.id === id);
+    if (sub && phase !== 'general') {
+      const newData = { ...sub.data };
+      if (phase === 'persiapan') newData._status_persiapan = status;
+      if (phase === 'pelaksanaan') newData._status_pelaksanaan = status;
+      updatePayload.data = newData;
+    }
+
+    const { error } = await supabase
+      .from('submissions')
+      .update(updatePayload)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Update Submission Status Error:', error);
+      toast.error(`Gagal mengupdate status: ${error.message}`);
+      setSubmissions(originalSubmissions); // rollback
+    }
+  }, [submissions]);
 
   const deleteSubmission = useCallback(async (id: string) => {
     setSubmissions((prev) => prev.filter((s) => s.id !== id));

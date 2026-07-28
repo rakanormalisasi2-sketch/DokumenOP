@@ -32,8 +32,7 @@ const AdminContractDocs = lazy(() => import("./pages/admin/AdminContractDocs"));
 
 // Respondent Pages
 const RespondentDashboard = lazy(() => import('./pages/respondent/RespondentDashboard'));
-const RespondentDokumenAwal = lazy(() => import('./pages/respondent/RespondentDokumenAwal'));
-const RespondentDokumenAkhir = lazy(() => import('./pages/respondent/RespondentDokumenAkhir'));
+const RespondentProjectDetail = lazy(() => import('./pages/respondent/RespondentProjectDetail'));
 const RespondentHistory = lazy(() => import('./pages/respondent/RespondentHistory'));
 const TestEditorPage = lazy(() => import('./pages/TestEditorPage'));
 
@@ -91,8 +90,7 @@ function AppRoutes() {
 
       {/* Respondent Routes */}
       <Route path="/respondent" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDashboard /></Suspense></ProtectedRoute>} />
-      <Route path="/respondent/dokumen-awal" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDokumenAwal /></Suspense></ProtectedRoute>} />
-      <Route path="/respondent/dokumen-akhir" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDokumenAkhir /></Suspense></ProtectedRoute>} />
+      <Route path="/respondent/pekerjaan/:id" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentProjectDetail /></Suspense></ProtectedRoute>} />
       <Route path="/respondent/history" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentHistory /></Suspense></ProtectedRoute>} />
 
       {/* Test Route */}

@@ -60,7 +60,7 @@ export interface FormField {
   visibleTo: 'respondent' | 'admin' | 'both';
   filledBy: 'respondent' | 'admin';
   phase: 'persiapan' | 'pelaksanaan';
-  showIn: ('awal' | 'akhir')[]; // Untuk pelaksanaan
+  showIn: ('awal' | 'akhir' | 'fisik' | 'konsultansi')[]; // Untuk pelaksanaan & filter kategori
   showInAdmin?: ('kak' | 'kontrak' | 'nota')[]; // Untuk persiapan (dokumen kontrak admin)
   // Khusus untuk type 'terbilang' & 'date_addition'
   linkedFieldId?: string; // Menyimpan ID field yang dirujuk
@@ -112,9 +112,14 @@ export interface Submission {
   id: string;
   respondentId: string;
   respondentName: string;
-  submissionPhase: 'awal' | 'akhir'; // Identifies which workflow phase this is in
-  status: DocumentStatus;
-  data: Record<string, string>; // The dynamic field data
+  submissionPhase?: 'awal' | 'akhir' | 'project'; // Deprecated for unified flow, use 'project' for unified
+  status: DocumentStatus; // General status
+  
+  // Virtual statuses derived from or saved in data json, but we can type them here if we map them
+  statusPersiapan?: DocumentStatus;
+  statusPelaksanaan?: DocumentStatus;
+  
+  data: Record<string, any>; // The dynamic field data
 
   // Base64 document attachments
   companyProfile?: string; // Uploaded by respondent in 'awal'

@@ -434,10 +434,9 @@ export default function AdminSubmissions() {
                     <TableHead className="w-12">No</TableHead>
                     <TableHead>Nama Pekerjaan</TableHead>
                     <TableHead>Responden</TableHead>
-                    <TableHead>Tipe Dokumen</TableHead>
-                    <TableHead>No. Kontrak</TableHead>
-                    <TableHead>Nilai</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Kategori</TableHead>
+                    <TableHead>Persiapan</TableHead>
+                    <TableHead>Pelaksanaan</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
@@ -450,35 +449,20 @@ export default function AdminSubmissions() {
                       onClick={() => handleViewDetail(submission)}
                     >
                       <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <span>{submission.data.nama_pekerjaan || '-'}</span>
-                          {submission.submissionPhase === 'awal' && (
-                            <span className="text-[10px] font-semibold tracking-wide bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full uppercase">
-                              Awal
-                            </span>
-                          )}
-                          {submission.submissionPhase === 'akhir' && (
-                            <span className="text-[10px] font-semibold tracking-wide bg-green-100 text-green-800 px-2 py-0.5 rounded-full uppercase">
-                              Akhir
-                            </span>
-                          )}
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">{submission.data.nama_pekerjaan || 'Tanpa Judul'}</span>
                         </div>
                       </TableCell>
                       <TableCell>{submission.respondentName}</TableCell>
                       <TableCell>
-                        <span className="text-sm">
-                          {submission.documentType ? DOCUMENT_TYPE_LABELS[submission.documentType] : '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{submission.data.nomor_kontrak || '-'}</TableCell>
-                      <TableCell>
-                        {submission.data.nilai_kontrak
-                          ? `Rp ${Number(submission.data.nilai_kontrak).toLocaleString('id-ID')}`
-                          : '-'}
+                        <span className="capitalize text-sm">{submission.workCategory || 'Semua'}</span>
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={submission.status} />
+                        <StatusBadge status={submission.statusPersiapan || 'draft'} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={submission.statusPelaksanaan || 'draft'} />
                       </TableCell>
                       <TableCell>
                         {format(new Date(submission.updatedAt), 'dd/MM/yyyy', { locale: idLocale })}
@@ -559,7 +543,7 @@ export default function AdminSubmissions() {
                   ))}
                   {filteredSubmissions.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Tidak ada data pengajuan yang ditemukan
                       </TableCell>
                     </TableRow>

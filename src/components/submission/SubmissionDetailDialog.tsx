@@ -141,9 +141,10 @@ export default function SubmissionDetailDialog({
             <DialogTitle>Detail Pengajuan - {submission.data.nama_pekerjaan || 'Tanpa Nama'}</DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="data" className="flex-1 overflow-hidden flex flex-col">
+          <Tabs defaultValue="persiapan" className="flex-1 overflow-hidden flex flex-col">
             <TabsList>
-              <TabsTrigger value="data">Data Pengajuan</TabsTrigger>
+              <TabsTrigger value="persiapan">Data Persiapan</TabsTrigger>
+              <TabsTrigger value="pelaksanaan">Data Pelaksanaan</TabsTrigger>
               {submission.companyProfile && <TabsTrigger value="company">Company Profile</TabsTrigger>}
               {isAdmin && <TabsTrigger value="dates">Pengaturan Tanggal</TabsTrigger>}
               <TabsTrigger value="print">Cetak Dokumen</TabsTrigger>
@@ -255,8 +256,8 @@ export default function SubmissionDetailDialog({
               </TabsContent>
             )}
 
-            {/* Data Tab - Spreadsheet-like view */}
-            <TabsContent value="data" className="flex-1 overflow-auto">
+            {/* Persiapan Tab */}
+            <TabsContent value="persiapan" className="flex-1 overflow-auto">
               <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -274,7 +275,7 @@ export default function SubmissionDetailDialog({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fields.map((field, index) => (
+                    {fields.filter(f => f.showIn?.includes('awal')).map((field, index) => (
                       <TableRow key={field.id}>
                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         <TableCell className="font-mono text-xs">{field.name}</TableCell>
@@ -299,23 +300,12 @@ export default function SubmissionDetailDialog({
                         {isAdmin && (
                           <>
                             <TableCell className="text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => toggleFieldVisibility(field.id, field.visibleTo)}
-                              >
-                                {field.visibleTo === 'both' ? '👁 Semua' :
-                                  field.visibleTo === 'admin' ? '🔒 Admin' : '👤 Responden'}
+                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => toggleFieldVisibility(field.id, field.visibleTo)}>
+                                {field.visibleTo === 'both' ? '👁 Semua' : field.visibleTo === 'admin' ? '🔒 Admin' : '👤 Responden'}
                               </Button>
                             </TableCell>
                             <TableCell className="text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => toggleFilledBy(field.id, field.filledBy)}
-                              >
+                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => toggleFilledBy(field.id, field.filledBy)}>
                                 {field.filledBy === 'respondent' ? '👤 Responden' : '🔒 Admin'}
                               </Button>
                             </TableCell>
@@ -370,6 +360,92 @@ export default function SubmissionDetailDialog({
                   Tambah Field Baru
                 </Button>
               )}
+
+              {/* Admin Actions for Persiapan */}
+              {isAdmin && (submission.statusPersiapan === 'submitted' || submission.statusPersiapan === 'review') && (
+                <div className="flex gap-2 justify-end mt-4">
+                  <Button variant="outline" className="text-warning border-warning" onClick={() => onUpdateSubmission(submission.id, { data: { ...submission.data, _status_persiapan: 'revision' }, statusPersiapan: 'revision' })}>
+                    Minta Revisi Persiapan
+                  </Button>
+                  <Button className="bg-success text-success-foreground" onClick={() => onUpdateSubmission(submission.id, { data: { ...submission.data, _status_persiapan: 'approved' }, statusPersiapan: 'approved' })}>
+                    Setujui Persiapan
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Pelaksanaan Tab */}
+            <TabsContent value="pelaksanaan" className="flex-1 overflow-auto">
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-12">No</TableHead>
+                      <TableHead className="min-w-[150px]">Field</TableHead>
+                      <TableHead className="min-w-[200px]">Label</TableHead>
+                      <TableHead className="min-w-[250px]">Nilai</TableHead>
+                      {isAdmin && (
+                        <>
+                          <TableHead className="w-32 text-center">Terlihat Oleh</TableHead>
+                          <TableHead className="w-32 text-center">Diisi Oleh</TableHead>
+                        </>
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fields.filter(f => f.showIn?.includes('akhir')).map((field, index) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="font-mono text-xs">{field.name}</TableCell>
+                        <TableCell className="font-medium">{field.label}</TableCell>
+                        <TableCell>
+                          {field.type === 'textarea' ? (
+                            <Textarea
+                              value={editedData[field.name] || ''}
+                              onChange={(e) => handleDataChange(field.name, e.target.value)}
+                              className="min-h-[60px]"
+                              disabled={!isAdmin && field.filledBy === 'admin'}
+                            />
+                          ) : (
+                            <Input
+                              type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                              value={editedData[field.name] || ''}
+                              onChange={(e) => handleDataChange(field.name, e.target.value)}
+                              disabled={!isAdmin && field.filledBy === 'admin'}
+                            />
+                          )}
+                        </TableCell>
+                        {isAdmin && (
+                          <>
+                            <TableCell className="text-center">
+                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => toggleFieldVisibility(field.id, field.visibleTo)}>
+                                {field.visibleTo === 'both' ? '👁 Semua' : field.visibleTo === 'admin' ? '🔒 Admin' : '👤 Responden'}
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button variant="ghost" size="sm" className="text-xs" onClick={() => toggleFilledBy(field.id, field.filledBy)}>
+                                {field.filledBy === 'respondent' ? '👤 Responden' : '🔒 Admin'}
+                              </Button>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Admin Actions for Pelaksanaan */}
+              {isAdmin && (submission.statusPelaksanaan === 'submitted' || submission.statusPelaksanaan === 'review') && (
+                <div className="flex gap-2 justify-end mt-4">
+                  <Button variant="outline" className="text-warning border-warning" onClick={() => onUpdateSubmission(submission.id, { data: { ...submission.data, _status_pelaksanaan: 'revision' }, statusPelaksanaan: 'revision' })}>
+                    Minta Revisi Pelaksanaan
+                  </Button>
+                  <Button className="bg-success text-success-foreground" onClick={() => onUpdateSubmission(submission.id, { data: { ...submission.data, _status_pelaksanaan: 'approved' }, statusPelaksanaan: 'approved' })}>
+                    Setujui Pelaksanaan
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             {/* Print Tab */}
@@ -383,7 +459,7 @@ export default function SubmissionDetailDialog({
                       variant="outline"
                       className="h-auto py-6 flex-col gap-2"
                       onClick={() => handlePrint(docType)}
-                      disabled={!isAdmin && submission.status !== 'approved'}
+                      disabled={!isAdmin && (submission.statusPersiapan !== 'approved' || submission.statusPelaksanaan !== 'approved')}
                     >
                       <Printer className="w-8 h-8" />
                       <span className="text-sm text-center">{template.name}</span>
@@ -398,16 +474,16 @@ export default function SubmissionDetailDialog({
                     // Print all documents
                     availableTemplates.forEach(template => handlePrint(template.type as DocumentType));
                   }}
-                  disabled={!isAdmin && submission.status !== 'approved'}
+                  disabled={!isAdmin && (submission.statusPersiapan !== 'approved' || submission.statusPelaksanaan !== 'approved')}
                 >
                   <Printer className="w-8 h-8" />
                   <span className="text-sm text-center">Cetak Semua</span>
                 </Button>
               </div>
 
-              {!isAdmin && submission.status !== 'approved' && (
+              {!isAdmin && (submission.statusPersiapan !== 'approved' || submission.statusPelaksanaan !== 'approved') && (
                 <div className="text-center text-muted-foreground py-4">
-                  Dokumen hanya dapat dicetak setelah disetujui admin.
+                  Dokumen hanya dapat dicetak setelah dokumen persiapan dan pelaksanaan disetujui admin.
                 </div>
               )}
             </TabsContent>
