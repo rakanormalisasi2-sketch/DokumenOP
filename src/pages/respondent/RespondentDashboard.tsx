@@ -480,7 +480,18 @@ export default function RespondentDashboard() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto pr-2">
-            {templates.filter(t => t.category === 'pelaksanaan' || t.category === 'pencairan' || t.phase === 'pelaksanaan').map((template) => {
+            {templates.filter(t => {
+              // Sembunyikan KAK / dokumen internal admin
+              if (t.type === 'kak_perencanaan' || t.type === 'kak_konsultansi' || t.category === 'kak') return false;
+              
+              // Tampilkan template persiapan jika Dokumen Persiapan sudah disetujui
+              if (t.phase === 'persiapan' && printSubmission?.statusPersiapan === 'approved') return true;
+              
+              // Tampilkan template pelaksanaan jika Dokumen Pelaksanaan sudah disetujui
+              if (t.phase === 'pelaksanaan' && printSubmission?.statusPelaksanaan === 'approved') return true;
+              
+              return false;
+            }).map((template) => {
               const isSpreadsheet = template.format === 'xlsx';
               return (
                 <Button
