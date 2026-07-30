@@ -15,6 +15,7 @@ import {
   Postcode,
   Filter,
   Eye,
+  Edit3,
   Printer,
   MessageSquare,
   FileSpreadsheet,
@@ -350,9 +351,13 @@ export default function RespondentDashboard() {
                       <Link to={`/respondent/pekerjaan/${submission.id}`}>
                         <button 
                           className="p-2 text-secondary hover:bg-secondary-container/20 rounded-lg transition-colors border border-transparent"
-                          title="Lihat Pekerjaan"
+                          title={(submission.status === 'draft' || submission.status === 'revision') ? 'Lanjutkan Edit' : 'Lihat Pekerjaan'}
                         >
-                          <Eye className="w-4 h-4" />
+                          {(submission.status === 'draft' || submission.status === 'revision') ? (
+                            <Edit3 className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                         </button>
                       </Link>
                       {submission.status === 'revision' && (
@@ -360,7 +365,7 @@ export default function RespondentDashboard() {
                           Lihat Catatan
                         </button>
                       )}
-                      {submission.status === 'approved' && (
+                      {((submission.status === 'approved') || (submission.statusPersiapan === 'approved') || (submission.statusPelaksanaan === 'approved')) && (
                         <button 
                           onClick={() => handlePrintClick(submission)}
                           className="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-md text-[13px] hover:bg-on-secondary-fixed-variant transition-colors"
