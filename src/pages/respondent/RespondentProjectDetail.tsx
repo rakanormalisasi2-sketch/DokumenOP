@@ -138,6 +138,10 @@ export default function RespondentProjectDetail() {
     const missingFields = fieldsToCheck
       .filter((f) => {
         if (!f.required) return false;
+        
+        // Lewati validasi untuk field yang di-generate otomatis
+        if (f.type === 'terbilang' || f.type === 'date_addition') return false;
+
         const value = formData[f.name];
         if (value === undefined || value === null) return true;
         if (typeof value === 'string' && value.trim() === '') return true;

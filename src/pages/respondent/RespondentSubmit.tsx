@@ -88,7 +88,11 @@ export default function RespondentSubmit() {
 
     // Validate required fields
     const missingFields = fields
-      .filter((f) => f.required && !formData[f.name])
+      .filter((f) => {
+        if (!f.required) return false;
+        if (f.type === 'terbilang' || f.type === 'date_addition') return false;
+        return !formData[f.name] || (typeof formData[f.name] === 'string' && formData[f.name].trim() === '');
+      })
       .map((f) => f.label);
 
     if (missingFields.length > 0) {
