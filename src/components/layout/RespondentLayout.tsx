@@ -21,9 +21,7 @@ interface RespondentLayoutProps {
 }
 
 const navItems = [
-  { href: '/respondent', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/respondent/dokumen-awal', icon: FilePlus, label: 'Dokumen Awal' },
-  { href: '/respondent/dokumen-akhir', icon: FileCheck2, label: 'Dokumen Akhir' },
+  { href: '/respondent', icon: LayoutDashboard, label: 'Dashboard Pekerjaan' },
   { href: '/respondent/history', icon: History, label: 'Riwayat Pengajuan' },
 ];
 
@@ -53,9 +51,9 @@ export default function RespondentLayout({ children }: RespondentLayoutProps) {
         </div>
 
         {/* CTA */}
-        <Link to="/respondent/dokumen-awal" className="mb-8 w-full bg-secondary text-on-secondary py-2 px-4 rounded font-label-md text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <Link to="/respondent?action=new" className="mb-8 w-full bg-secondary text-on-secondary py-2 px-4 rounded font-label-md text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <FilePlus className="w-5 h-5" />
-          <span>Dokumen Baru</span>
+          <span>Buat Pekerjaan Baru</span>
         </Link>
 
         {/* Navigation Tabs */}

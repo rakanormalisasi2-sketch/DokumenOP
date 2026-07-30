@@ -92,6 +92,10 @@ function AppRoutes() {
       <Route path="/respondent" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentDashboard /></Suspense></ProtectedRoute>} />
       <Route path="/respondent/pekerjaan/:id" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentProjectDetail /></Suspense></ProtectedRoute>} />
       <Route path="/respondent/history" element={<ProtectedRoute requiredRole="respondent"><Suspense fallback={<PageLoader />}><RespondentHistory /></Suspense></ProtectedRoute>} />
+      
+      {/* Fallbacks for deprecated routes to prevent 404 from old bookmarks/cache */}
+      <Route path="/respondent/dokumen-awal" element={<Navigate to="/respondent?action=new" replace />} />
+      <Route path="/respondent/dokumen-akhir" element={<Navigate to="/respondent" replace />} />
 
       {/* Test Route */}
       <Route path="/test-editor" element={<Suspense fallback={<PageLoader />}><TestEditorPage /></Suspense>} />

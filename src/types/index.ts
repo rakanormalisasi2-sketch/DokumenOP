@@ -52,7 +52,7 @@ export interface FormField {
   id: string;
   name: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'date_addition' | 'textarea' | 'select' | 'terbilang' | 'file';
+  type: 'text' | 'number' | 'date' | 'date_addition' | 'textarea' | 'select' | 'terbilang' | 'file' | 'rab_excel_upload';
   placeholder?: string;
   options?: string[];
   required: boolean;
@@ -87,13 +87,24 @@ export interface SchedulePhase {
   splits?: { days: number; description: string }[];
 }
 
-// Lampiran BAPHP item for dynamic rows
-export interface LampiranBAPHPItem {
+export interface RabRealisasiItem {
   id: string;
   no: number;
-  namaPekerjaan: string;
-  bobotPersen: number;
-  keterangan?: string;
+  jenisPekerjaan: string;
+  satuan: string;
+  kontrakVolume: number;
+  kontrakBobot: number;
+  realisasiVolume: number;
+  realisasiBobot: number;
+}
+
+export interface BaphpDokumenItem {
+  id: string;
+  no: number;
+  uraian: string;
+  kriteriaAda: boolean;
+  kriteriaTidakAda: boolean;
+  catatan: string;
 }
 
 // Adendum document structure
@@ -137,7 +148,8 @@ export interface Submission {
   schedulePhases?: SchedulePhase[];
   durasiPelaksanaan?: number;
   // Lampiran BAPHP items
-  lampiranBaphpItems?: LampiranBAPHPItem[];
+  rabRealisasiItems?: RabRealisasiItem[];
+  baphpDokumenItems?: BaphpDokumenItem[];
   // Adendum documents
   adendumDocuments?: AdendumDocument[];
   // Error reports from respondents

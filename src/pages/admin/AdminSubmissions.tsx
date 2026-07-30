@@ -17,7 +17,8 @@ import {
   STATUS_LABELS,
   PaperSize,
   AdendumDocument,
-  LampiranBAPHPItem,
+  RabRealisasiItem,
+  BaphpDokumenItem,
   WorkCategory,
 } from '@/types';
 import SubmissionDetailDialog from '@/components/submission/SubmissionDetailDialog';
@@ -103,7 +104,8 @@ export default function AdminSubmissions() {
 
   // Lampiran BAPHP Dialog
   const [showLampiranBaphpDialog, setShowLampiranBaphpDialog] = useState(false);
-  const [lampiranBaphpItems, setLampiranBaphpItems] = useState<LampiranBAPHPItem[]>([]);
+  const [rabRealisasiItems, setRabRealisasiItems] = useState<RabRealisasiItem[]>([]);
+  const [baphpDokumenItems, setBaphpDokumenItems] = useState<BaphpDokumenItem[]>([]);
 
   // Adendum Dialog
   const [showAdendumDialog, setShowAdendumDialog] = useState(false);
@@ -144,12 +146,32 @@ export default function AdminSubmissions() {
   const confirmAction = (action: 'approve' | 'revision') => {
     if (!selectedSubmission) return;
 
+    const isPersiapanPending = selectedSubmission.statusPersiapan === 'submitted';
+    const isPelaksanaanPending = selectedSubmission.statusPelaksanaan === 'submitted';
+    
+    let updates: Partial<Submission> = {};
     if (action === 'approve') {
-      updateSubmission(selectedSubmission.id, { documentDate });
-      updateSubmissionStatus(selectedSubmission.id, 'approved');
+      updates = { adminFeedback: '', documentDate };
+      if (isPersiapanPending) updates.statusPersiapan = 'approved';
+      if (isPelaksanaanPending) updates.statusPelaksanaan = 'approved';
+      
+      // Only set root status to approved if ALL phases are approved.
+      // If we are approving Persiapan, keep root status as 'draft' so they can submit Pelaksanaan.
+      const isPersiapanDone = (updates.statusPersiapan || selectedSubmission.statusPersiapan) === 'approved';
+      const isPelaksanaanDone = (updates.statusPelaksanaan || selectedSubmission.statusPelaksanaan) === 'approved';
+      
+      if (isPersiapanDone && isPelaksanaanDone) {
+         updates.status = 'approved';
+      } else {
+         updates.status = 'draft'; // Revert to draft so respondent can fill the next phase
+      }
     } else {
-      updateSubmissionStatus(selectedSubmission.id, 'revision', feedback);
+      updates = { status: 'revision', adminFeedback: feedback };
+      if (isPersiapanPending) updates.statusPersiapan = 'revision';
+      if (isPelaksanaanPending) updates.statusPelaksanaan = 'revision';
     }
+
+    updateSubmission(selectedSubmission.id, updates);
 
     setFeedbackDialog(false);
     setSelectedSubmission(null);
@@ -185,23 +207,57 @@ export default function AdminSubmissions() {
   // Handle Lampiran BAPHP
   const handleOpenLampiranBaphp = (submission: Submission) => {
     setSelectedSubmission(submission);
-    setLampiranBaphpItems(submission.lampiranBaphpItems || []);
+    
+    // Default data from RAB Excel upload if it exists
+    let initialRabRealisasi: RabRealisasiItem[] = submission.rabRealisasiItems || [];
+    
+    if (initialRabRealisasi.length === 0) {
+        // Try to look for any field that ends with _data (which is where we store RAB JSON)
+        const rabDataKeys = Object.keys(submission.data).filter(k => k.endsWith('_data'));
+        if (rabDataKeys.length > 0) {
+            try {
+                const parsedRab = JSON.parse(submission.data[rabDataKeys[0]]);
+                if (Array.isArray(parsedRab)) {
+                    initialRabRealisasi = parsedRab.map((item: any, idx: number) => ({
+                        id: item.id || crypto.randomUUID(),
+                        no: idx + 1,
+                        jenisPekerjaan: item.jenisPekerjaan || '',
+                        satuan: item.satuan || '',
+                        kontrakVolume: item.volume || 0,
+                        kontrakBobot: item.bobotPersen || 0,
+                        realisasiVolume: 0,
+                        realisasiBobot: 0
+                    }));
+                }
+            } catch (e) {
+                console.error("Failed to parse RAB data", e);
+            }
+        }
+    }
+    
+    setRabRealisasiItems(initialRabRealisasi);
+    setBaphpDokumenItems(submission.baphpDokumenItems || []);
     setShowLampiranBaphpDialog(true);
   };
 
-  const handleSaveLampiranBaphp = () => {
+  const handleSaveLampiranBaphp = async () => {
     if (!selectedSubmission) return;
 
     updateSubmission(selectedSubmission.id, {
-      lampiranBaphpItems,
+      rabRealisasiItems,
+      baphpDokumenItems
     });
 
     toast.success('Lampiran BAPHP berhasil disimpan');
     setShowLampiranBaphpDialog(false);
 
-    // Open preview
-    setPreviewDocType('lampiran_baphp');
-    setShowPreviewDialog(true);
+    // Langsung download Excel
+    const { generateLampiranBaphpExcel } = await import('@/lib/baphpExcelGenerator');
+    await generateLampiranBaphpExcel({
+      ...selectedSubmission,
+      rabRealisasiItems,
+      baphpDokumenItems
+    });
   };
 
   // Handle Adendum
@@ -722,14 +778,17 @@ export default function AdminSubmissions() {
               </DialogDescription>
             </DialogHeader>
             <LampiranBAPHPEditor
-              items={lampiranBaphpItems}
-              onChange={setLampiranBaphpItems}
+              rabRealisasiItems={rabRealisasiItems}
+              onChangeRab={setRabRealisasiItems}
+              baphpDokumenItems={baphpDokumenItems}
+              onChangeDokumen={setBaphpDokumenItems}
+              submission={selectedSubmission}
             />
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowLampiranBaphpDialog(false)}>Batal</Button>
-              <Button onClick={handleSaveLampiranBaphp} className="gap-2">
-                <Printer className="w-4 h-4" />
-                Simpan & Preview
+              <Button onClick={handleSaveLampiranBaphp} className="gap-2 bg-green-600 hover:bg-green-700">
+                <FileSpreadsheet className="w-4 h-4" />
+                Simpan & Cetak Excel
               </Button>
             </DialogFooter>
           </DialogContent>

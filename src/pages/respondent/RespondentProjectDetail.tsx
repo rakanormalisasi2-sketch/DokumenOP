@@ -60,7 +60,7 @@ export default function RespondentProjectDetail() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileUpload = async (name: string, file: File | null, isCompanyProfile: boolean = false) => {
+  const handleFileUpload = async (name: string, file: File | null, isCompanyProfile: boolean = false, fieldType?: string) => {
     if (!file) {
       if (isCompanyProfile) setCompanyProfile(null);
       else handleInputChange(name, '');
@@ -79,6 +79,20 @@ export default function RespondentProjectDetail() {
 
     setUploadingFields(prev => ({ ...prev, [name]: true }));
     try {
+      // Jika ini adalah upload RAB khusus
+      if (fieldType === 'rab_excel_upload') {
+        const { parseRabExcel } = await import('@/lib/rabParser');
+        const parsedData = await parseRabExcel(file);
+        if (parsedData.length === 0) {
+          toast.error('Tidak ditemukan data RAB pada file ini. Pastikan format tabel benar.');
+          setUploadingFields(prev => ({ ...prev, [name]: false }));
+          return;
+        }
+        // Simpan data JSON RAB ke dalam formData dengan suffix _data
+        setFormData(prev => ({ ...prev, [`${name}_data`]: JSON.stringify(parsedData) }));
+        toast.success(`Berhasil mengekstrak ${parsedData.length} baris RAB`);
+      }
+
       const respondentId = user?.id || 'demo';
       const timestamp = new Date().getTime();
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
@@ -95,8 +109,9 @@ export default function RespondentProjectDetail() {
         handleInputChange(name, link);
       }
       toast.success(`File ${file.name} berhasil diunggah`);
-    } catch (err) {
-      toast.error('Gagal mengunggah file. Pastikan Cloudflare R2 terhubung.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Gagal mengunggah file. Pastikan Cloudflare R2 terhubung.');
     } finally {
       setUploadingFields(prev => ({ ...prev, [name]: false }));
     }
@@ -158,6 +173,34 @@ export default function RespondentProjectDetail() {
     }
   };
 
+  const handleRequestUnlock = async (phase: 'persiapan' | 'pelaksanaan') => {
+    const reason = window.prompt('Masukkan alasan mengapa Anda perlu mengubah dokumen ini:');
+    if (!reason) return;
+    
+    setIsSubmitting(true);
+    try {
+      const newData = { ...project.data, ...formData };
+      if (phase === 'persiapan') {
+        newData._status_persiapan = 'review';
+        newData._unlock_request_persiapan = reason;
+      }
+      if (phase === 'pelaksanaan') {
+        newData._status_pelaksanaan = 'review';
+        newData._unlock_request_pelaksanaan = reason;
+      }
+      
+      await updateSubmission(project.id, {
+        data: newData,
+      });
+
+      toast.success('Permintaan perubahan berhasil dikirim ke Admin. Menunggu persetujuan.');
+    } catch (e) {
+      toast.error('Gagal mengirim permintaan perubahan');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderField = (field: FormField, disabled: boolean) => {
     return (
       <div key={field.id} className="space-y-2">
@@ -187,18 +230,29 @@ export default function RespondentProjectDetail() {
             </SelectContent>
           </Select>
         )}
-        {field.type === 'file' && (
+        {(field.type === 'file' || field.type === 'rab_excel_upload') && (
           <div className="space-y-2">
             {formData[field.name] && (
               <a href={formData[field.name]} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline block mb-2">
                 Lihat File Saat Ini
               </a>
             )}
+            {field.type === 'rab_excel_upload' && formData[`${field.name}_data`] && (
+               <div className="text-sm text-green-600 bg-green-50 p-2 rounded-md mb-2">
+                 ✅ Data RAB berhasil diekstrak (Siap untuk BAPHP)
+               </div>
+            )}
             <Input
               type="file"
-              onChange={(e) => handleFileUpload(field.name, e.target.files?.[0] || null)}
+              accept={field.type === 'rab_excel_upload' ? ".xlsx, .xls" : undefined}
+              onChange={(e) => handleFileUpload(field.name, e.target.files?.[0] || null, false, field.type)}
               disabled={disabled || uploadingFields[field.name]}
             />
+            {field.type === 'rab_excel_upload' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload file Excel (.xlsx). Sistem akan otomatis membaca data untuk lampiran BAPHP.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -252,7 +306,7 @@ export default function RespondentProjectDetail() {
                   {persiapanFields.map(f => renderField(f, isPersiapanLocked))}
                 </div>
 
-                {!isPersiapanLocked && (
+                {!isPersiapanLocked ? (
                   <div className="flex justify-end gap-3 mt-8">
                     <Button variant="outline" onClick={() => handleSave('persiapan')} disabled={isSubmitting}>
                       <Save className="w-4 h-4 mr-2" /> Simpan Draft
@@ -260,6 +314,15 @@ export default function RespondentProjectDetail() {
                     <Button onClick={() => handleSubmitToAdmin('persiapan')} disabled={isSubmitting}>
                       <Send className="w-4 h-4 mr-2" /> Ajukan Persiapan
                     </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-end gap-2 mt-8 border-t pt-4">
+                    <p className="text-sm text-muted-foreground">Dokumen persiapan telah diajukan/dikunci.</p>
+                    {statusPersiapan === 'approved' && (
+                      <Button variant="secondary" onClick={() => handleRequestUnlock('persiapan')} disabled={isSubmitting}>
+                        Ajukan Perubahan
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -285,7 +348,7 @@ export default function RespondentProjectDetail() {
                   {pelaksanaanFields.map(f => renderField(f, isPelaksanaanLocked))}
                 </div>
 
-                {!isPelaksanaanLocked && (
+                {!isPelaksanaanLocked ? (
                   <div className="flex justify-end gap-3 mt-8">
                     <Button variant="outline" onClick={() => handleSave('pelaksanaan')} disabled={isSubmitting}>
                       <Save className="w-4 h-4 mr-2" /> Simpan Draft
@@ -293,6 +356,15 @@ export default function RespondentProjectDetail() {
                     <Button onClick={() => handleSubmitToAdmin('pelaksanaan')} disabled={isSubmitting}>
                       <Send className="w-4 h-4 mr-2" /> Ajukan Pelaksanaan
                     </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-end gap-2 mt-8 border-t pt-4">
+                    <p className="text-sm text-muted-foreground">Dokumen pelaksanaan telah diajukan/dikunci.</p>
+                    {statusPelaksanaan === 'approved' && (
+                      <Button variant="secondary" onClick={() => handleRequestUnlock('pelaksanaan')} disabled={isSubmitting}>
+                        Ajukan Perubahan
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>

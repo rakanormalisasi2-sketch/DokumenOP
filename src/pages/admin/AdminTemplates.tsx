@@ -643,7 +643,20 @@ export default function AdminTemplates() {
                 <Input
                   placeholder="Contoh: Template KAK Baru"
                   value={templateForm.name}
-                  onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setTemplateForm(prev => {
+                      const newState = { ...prev, name: newName };
+                      if (!isEditingMeta) {
+                        // Auto-generate identifier
+                        newState.type = newName
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, '_')
+                          .replace(/(^_|_$)/g, '');
+                      }
+                      return newState;
+                    });
+                  }}
                 />
               </div>
               <div className="space-y-2">

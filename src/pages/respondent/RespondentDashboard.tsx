@@ -5,7 +5,8 @@ import { useData } from '@/contexts/DataContext';
 import RespondentLayout from '@/components/layout/RespondentLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DocumentType, Submission } from '@/types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import {
   FileText,
   Clock,
@@ -48,8 +49,17 @@ export default function RespondentDashboard() {
   const navigate = useNavigate();
   const { submissions, templates, fields, addSubmission, addErrorReport } = useData();
 
-  // New Project State
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'new') {
+      setShowNewProjectDialog(true);
+      // Clean up the URL to remove the query parameter
+      navigate('/respondent', { replace: true });
+    }
+  }, [location.search, navigate]);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectCategory, setNewProjectCategory] = useState<'fisik' | 'konsultansi'>('fisik');
   const [isCreatingProject, setIsCreatingProject] = useState(false);

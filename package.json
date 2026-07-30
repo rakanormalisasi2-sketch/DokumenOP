@@ -77,6 +77,7 @@
     "docxtemplater": "^3.68.3",
     "dompurify": "^3.4.12",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "handsontable": "^16.2.0",
     "html-to-docx": "^1.8.0",

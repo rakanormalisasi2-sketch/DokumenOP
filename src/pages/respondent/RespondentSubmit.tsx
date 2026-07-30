@@ -37,7 +37,7 @@ export default function RespondentSubmit() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileUpload = async (name: string, file: File | null) => {
+  const handleFileUpload = async (name: string, file: File | null, fieldType?: string) => {
     if (!file) {
       handleInputChange(name, '');
       return;
@@ -51,6 +51,18 @@ export default function RespondentSubmit() {
 
     setUploadingFields(prev => ({ ...prev, [name]: true }));
     try {
+      if (fieldType === 'rab_excel_upload') {
+        const { parseRabExcel } = await import('@/lib/rabParser');
+        const parsedData = await parseRabExcel(file);
+        if (parsedData.length === 0) {
+          toast.error('Tidak ditemukan data RAB pada file ini. Pastikan format tabel benar.');
+          setUploadingFields(prev => ({ ...prev, [name]: false }));
+          return;
+        }
+        setFormData(prev => ({ ...prev, [`${name}_data`]: JSON.stringify(parsedData) }));
+        toast.success(`Berhasil mengekstrak ${parsedData.length} baris RAB`);
+      }
+
       // Create a unique path for the file in R2
       const respondentId = user?.id || 'demo';
       const timestamp = new Date().getTime();
@@ -62,8 +74,9 @@ export default function RespondentSubmit() {
       
       handleInputChange(name, link);
       toast.success(`File ${file.name} berhasil diunggah ke Cloudflare R2.`);
-    } catch (err) {
-      toast.error(`Gagal mengunggah file. Pastikan Cloudflare R2 terhubung.`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || `Gagal mengunggah file. Pastikan Cloudflare R2 terhubung.`);
     } finally {
       setUploadingFields(prev => ({ ...prev, [name]: false }));
     }
@@ -172,19 +185,30 @@ export default function RespondentSubmit() {
                         ))}
                       </SelectContent>
                     </Select>
-                  ) : field.type === 'file' ? (
+                  ) : (field.type === 'file' || field.type === 'rab_excel_upload') ? (
                     <div className="flex flex-col space-y-2">
                       <Input
                         id={field.name}
                         type="file"
-                        onChange={(e) => handleFileUpload(field.name, e.target.files?.[0] || null)}
+                        accept={field.type === 'rab_excel_upload' ? ".xlsx, .xls" : undefined}
+                        onChange={(e) => handleFileUpload(field.name, e.target.files?.[0] || null, field.type)}
                         disabled={uploadingFields[field.name]}
                       />
-                      {uploadingFields[field.name] && <p className="text-xs text-blue-500 animate-pulse">Mengunggah ke Google Drive...</p>}
+                      {field.type === 'rab_excel_upload' && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Upload file Excel (.xlsx). Sistem otomatis membaca data untuk lampiran BAPHP.
+                        </p>
+                      )}
+                      {uploadingFields[field.name] && <p className="text-xs text-blue-500 animate-pulse">Mengunggah ke Cloudflare R2...</p>}
                       {formData[field.name] && !uploadingFields[field.name] && (
                         <p className="text-xs text-green-600 truncate flex items-center gap-1">
                            <FileText className="w-3 h-3" /> <a href={formData[field.name]} target="_blank" rel="noopener noreferrer" className="underline hover:text-green-700">File berhasil diunggah (Lihat)</a>
                         </p>
+                      )}
+                      {field.type === 'rab_excel_upload' && formData[`${field.name}_data`] && (
+                         <div className="text-sm text-green-600 bg-green-50 p-2 rounded-md mb-2">
+                           ✅ Data RAB berhasil diekstrak (Siap untuk BAPHP)
+                         </div>
                       )}
                     </div>
                   ) : (

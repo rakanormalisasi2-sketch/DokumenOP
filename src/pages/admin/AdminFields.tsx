@@ -66,6 +66,7 @@ const fieldTypeIcons = {
   terbilang: Type,
   file: FileUp,
   date_addition: Calendar,
+  rab_excel_upload: FileUp,
 };
 
 const fieldTypeLabels = {
@@ -77,6 +78,7 @@ const fieldTypeLabels = {
   terbilang: 'Terbilang (Teks Ejaan Angka)',
   file: 'File Upload (Cloudflare R2)',
   date_addition: 'Penambahan Tanggal (Otomatis)',
+  rab_excel_upload: 'Upload Excel RAB (Otomatis JSON)',
 };
 
 const SortableFieldItem = ({ field, onEdit, onDelete }: { field: FormField, onEdit: (f: FormField) => void, onDelete: (id: string) => void }) => {
@@ -203,7 +205,7 @@ export default function AdminFields() {
     showIn: ['awal', 'akhir'] as ('awal' | 'akhir' | 'fisik' | 'konsultansi')[],
     showInAdmin: ['kak', 'kontrak', 'nota'] as ('kak' | 'kontrak' | 'nota')[],
     linkedFieldId: '',
-    terbilangFormat: 'angka' as 'angka' | 'rupiah',
+    terbilangFormat: 'angka' as FormField['terbilangFormat'],
     dateAdditionDays: 0,
     options: [],
   });
@@ -589,6 +591,7 @@ export default function AdminFields() {
                     <SelectItem value="select">Pilihan</SelectItem>
                     <SelectItem value="terbilang">Terbilang (Teks Ejaan Angka)</SelectItem>
                     <SelectItem value="file">File Upload (Cloudflare R2)</SelectItem>
+                    <SelectItem value="rab_excel_upload">Upload Excel RAB (Otomatis JSON)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -687,7 +690,7 @@ export default function AdminFields() {
                     <Label>Format Terbilang</Label>
                     <Select
                       value={formData.terbilangFormat}
-                      onValueChange={(val) => setFormData({ ...formData, terbilangFormat: val as 'angka' | 'rupiah' | 'tanggal' | 'tanggal_hari' })}
+                      onValueChange={(val) => setFormData({ ...formData, terbilangFormat: val as FormField['terbilangFormat'] })}
                     >
                       <SelectTrigger>
                         <SelectValue />
