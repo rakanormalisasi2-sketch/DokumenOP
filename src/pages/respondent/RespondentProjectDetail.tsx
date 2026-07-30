@@ -145,9 +145,7 @@ export default function RespondentProjectDetail() {
       })
       .map((f) => f.label);
 
-    if (phase === 'persiapan' && !companyProfile) {
-      missingFields.push('Company Profile (PDF)');
-    }
+
 
     if (missingFields.length > 0) {
       toast.error(`Mohon lengkapi: ${missingFields.join(', ')}`);
@@ -294,13 +292,7 @@ export default function RespondentProjectDetail() {
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 
-                <div className="space-y-2">
-                  <Label>Company Profile (PDF) <span className="text-destructive">*</span></Label>
-                  {companyProfile && (
-                    <a href={companyProfile} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline block mb-2">Lihat File Saat Ini</a>
-                  )}
-                  <Input type="file" accept="application/pdf" onChange={(e) => handleFileUpload('companyProfile', e.target.files?.[0] || null, true)} disabled={isPersiapanLocked || uploadingFields['companyProfile']} />
-                </div>
+
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {persiapanFields.map(f => renderField(f, isPersiapanLocked))}
