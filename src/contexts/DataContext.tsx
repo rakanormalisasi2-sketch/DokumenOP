@@ -188,8 +188,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             documentDates: s.document_dates,
             companyProfile: s.company_profile,
             contractFile: s.contract_file,
-            statusPersiapan: s.data?._status_persiapan || 'draft',
-            statusPelaksanaan: s.data?._status_pelaksanaan || 'draft'
+            statusPersiapan: s.data?._status_persiapan || s.status || 'draft',
+            statusPelaksanaan: s.data?._status_pelaksanaan || s.status || 'draft'
           })) as Submission[];
           setSubmissions(parsed);
         }
@@ -261,8 +261,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSubmissions(data.map((s: any) => ({
           ...s, respondentId: s.respondent_id, respondentName: s.respondent_name,
           submissionPhase: s.submission_phase, documentType: s.document_type,
-          statusPersiapan: s.data?._status_persiapan || 'draft',
-          statusPelaksanaan: s.data?._status_pelaksanaan || 'draft',
+          statusPersiapan: s.data?._status_persiapan || s.status || 'draft',
+          statusPelaksanaan: s.data?._status_pelaksanaan || s.status || 'draft',
           workCategory: s.work_category, adminFeedback: s.admin_feedback,
           documentDate: s.document_date, createdAt: new Date(s.created_at),
           updatedAt: new Date(s.updated_at), kakType: s.kak_type,
