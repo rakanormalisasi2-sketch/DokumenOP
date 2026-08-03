@@ -12,16 +12,12 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Postcode,
   Filter,
   Eye,
   Edit3,
   Printer,
-  MessageSquare,
   FileSpreadsheet,
-  Check,
-  RefreshCw,
-  Verified,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -48,7 +44,23 @@ export default function RespondentDashboard() {
   const [previewType, setPreviewType] = useState<DocumentType | null>(null);
   const [showAnnotator, setShowAnnotator] = useState(false);
   const navigate = useNavigate();
-  const { submissions, templates, fields, addSubmission, addErrorReport } = useData();
+  const { submissions, templates, fields, addSubmission, addErrorReport, deleteSubmission } = useData();
+  const [deleteConfirmSubmission, setDeleteConfirmSubmission] = useState<Submission | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteDraft = async () => {
+    if (!deleteConfirmSubmission) return;
+    setIsDeleting(true);
+    try {
+      await deleteSubmission(deleteConfirmSubmission.id);
+      toast.success('Pekerjaan berhasil dihapus');
+      setDeleteConfirmSubmission(null);
+    } catch (e) {
+      toast.error('Gagal menghapus pekerjaan');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const location = useLocation();
@@ -152,13 +164,19 @@ export default function RespondentDashboard() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [mySubmissions]);
 
-  const latestSubmission = useMemo(() => recentSubmissions[0], [recentSubmissions]);
+
+
+  const activeSubmissions = useMemo(() => {
+    return recentSubmissions
+      .filter(s => s.statusPersiapan !== 'approved' || s.statusPelaksanaan !== 'approved')
+      .slice(0, 5);
+  }, [recentSubmissions]);
 
   const stats = useMemo(
     () => ({
-      pending: mySubmissions.filter((s) => s.status === 'submitted' || s.status === 'review').length,
-      approved: mySubmissions.filter((s) => s.status === 'approved').length,
-      revision: mySubmissions.filter((s) => s.status === 'revision').length,
+      pending: mySubmissions.filter((s) => s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted' || s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review').length,
+      approved: mySubmissions.filter((s) => s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved').length,
+      revision: mySubmissions.filter((s) => s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision').length,
     }),
     [mySubmissions]
   );
@@ -246,43 +264,35 @@ export default function RespondentDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Timeline Stepper Widget (Spans 2 columns on large screens) */}
         <div className="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant p-6 flex flex-col shadow-sm">
-          <h3 className="font-title-lg text-lg font-semibold text-primary mb-6">Status Pengajuan Terkini</h3>
-          {latestSubmission ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-4">
-              <div className="flex items-center w-full max-w-2xl mx-auto">
-                {/* Step 1: Submitted */}
-                <div className="flex flex-col items-center relative flex-1">
-                  <div className="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center z-10 border-4 border-surface-container-lowest shadow-sm">
-                    <Check className="w-5 h-5" />
+          <h3 className="font-title-lg text-lg font-semibold text-primary mb-6">Pekerjaan Aktif</h3>
+          {activeSubmissions.length > 0 ? (
+            <div className="space-y-4">
+              {activeSubmissions.map((submission) => (
+                <div key={submission.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-outline-variant">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-primary truncate" title={submission.data.nama_pekerjaan || 'Tanpa Judul'}>
+                      {submission.data.nama_pekerjaan || 'Tanpa Judul'}
+                    </p>
+                    <div className="flex gap-2 mt-2 items-center text-xs">
+                      <span className="text-muted-foreground">Persiapan:</span>
+                      <StatusBadge status={submission.statusPersiapan || 'draft'} />
+                      <span className="text-muted-foreground ml-2">Pelaksanaan:</span>
+                      <StatusBadge status={submission.statusPelaksanaan || 'draft'} />
+                    </div>
                   </div>
-                  <span className="font-label-md text-sm text-primary mt-3 text-center">Submitted</span>
-                </div>
-                {/* Connector 1 */}
-                <div className={`h-[2px] flex-1 -mx-4 z-0 mb-8 ${latestSubmission.status !== 'submitted' ? 'bg-secondary' : 'bg-surface-variant'}`}></div>
-                {/* Step 2: Under Review */}
-                <div className="flex flex-col items-center relative flex-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 border-4 border-surface-container-lowest shadow-sm ${latestSubmission.status === 'review' ? 'bg-secondary-container text-on-secondary-container ring-2 ring-secondary ring-offset-2' : latestSubmission.status === 'approved' ? 'bg-secondary text-on-secondary' : 'bg-surface-variant text-on-surface-variant'}`}>
-                    <RefreshCw className="w-5 h-5" />
+                  <div className="ml-4 flex-shrink-0">
+                    <Link to={`/respondent/pekerjaan/${submission.id}`}>
+                      <button className="text-secondary bg-secondary-container/20 hover:bg-secondary-container/40 p-2 rounded-lg transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </Link>
                   </div>
-                  <span className={`font-label-md text-sm mt-3 text-center ${latestSubmission.status === 'review' ? 'text-secondary font-bold' : 'text-on-surface-variant'}`}>Under Review</span>
                 </div>
-                {/* Connector 2 */}
-                <div className={`h-[2px] flex-1 -mx-4 z-0 mb-8 ${latestSubmission.status === 'approved' ? 'bg-secondary' : 'bg-surface-variant'}`}></div>
-                {/* Step 3: Approved */}
-                <div className="flex flex-col items-center relative flex-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 border-4 border-surface-container-lowest shadow-sm ${latestSubmission.status === 'approved' ? 'bg-secondary text-on-secondary' : 'bg-surface-variant text-on-surface-variant'}`}>
-                    <Verified className="w-5 h-5" />
-                  </div>
-                  <span className={`font-label-md text-sm mt-3 text-center ${latestSubmission.status === 'approved' ? 'text-secondary font-bold' : 'text-on-surface-variant'}`}>Approved</span>
-                </div>
-              </div>
-              <div className="mt-8 bg-surface-container-low w-full p-4 rounded-lg font-body-sm text-sm text-on-surface-variant border border-outline-variant border-dashed">
-                <span className="font-bold text-primary">Proyek: {latestSubmission.data.nama_pekerjaan || 'Tanpa Judul'}</span> - Status: <span className="uppercase">{latestSubmission.status}</span>. Diperbarui pada {format(new Date(latestSubmission.updatedAt), 'dd MMM yyyy HH:mm', { locale: id })}
-              </div>
+              ))}
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-on-surface-variant font-body-sm text-sm p-8">
-              Belum ada pengajuan.
+            <div className="flex-1 flex items-center justify-center text-on-surface-variant font-body-sm text-sm p-8 bg-surface-container-low rounded-lg border border-dashed border-outline-variant">
+              Semua pekerjaan sudah selesai atau belum ada pekerjaan.
             </div>
           )}
         </div>
@@ -330,14 +340,15 @@ export default function RespondentDashboard() {
               <tr className="bg-surface-container-low border-b border-outline-variant">
                 <th className="py-3 px-6 font-label-md text-sm text-primary font-bold">Nama Proyek</th>
                 <th className="py-3 px-6 font-label-md text-sm text-primary font-bold">Tgl. Pengajuan</th>
-                <th className="py-3 px-6 font-label-md text-sm text-primary font-bold">Status</th>
+                <th className="py-3 px-6 font-label-md text-sm text-primary font-bold">Persiapan</th>
+                <th className="py-3 px-6 font-label-md text-sm text-primary font-bold">Pelaksanaan</th>
                 <th className="py-3 px-6 font-label-md text-sm text-primary font-bold text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="font-body-sm text-sm text-on-surface">
               {recentSubmissions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-on-surface-variant">Belum ada pengajuan.</td>
+                  <td colSpan={5} className="py-8 text-center text-on-surface-variant">Belum ada pengajuan.</td>
                 </tr>
               ) : (
                 recentSubmissions.slice(0, 5).map((submission) => (
@@ -345,23 +356,38 @@ export default function RespondentDashboard() {
                     <td className="py-4 px-6 font-medium text-primary">{submission.data.nama_pekerjaan || 'Tanpa Judul'}</td>
                     <td className="py-4 px-6 text-on-surface-variant">{format(new Date(submission.createdAt), 'dd MMM yyyy', { locale: id })}</td>
                     <td className="py-4 px-6">
-                      <StatusBadge status={submission.status} />
+                      <StatusBadge status={submission.statusPersiapan || 'draft'} />
+                    </td>
+                    <td className="py-4 px-6">
+                      <StatusBadge status={submission.statusPelaksanaan || 'draft'} />
                     </td>
                     <td className="py-4 px-6 flex justify-end space-x-2">
+                      {(submission.statusPersiapan === 'draft' || !submission.statusPersiapan) && (submission.statusPelaksanaan === 'draft' || !submission.statusPelaksanaan) && (
+                        <button 
+                          onClick={() => setDeleteConfirmSubmission(submission)}
+                          className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors border border-transparent"
+                          title="Hapus Draft"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                       <Link to={`/respondent/pekerjaan/${submission.id}`}>
                         <button 
                           className="p-2 text-secondary hover:bg-secondary-container/20 rounded-lg transition-colors border border-transparent"
-                          title={(submission.status === 'draft' || submission.status === 'revision') ? 'Lanjutkan Edit' : 'Lihat Pekerjaan'}
+                          title={((submission.statusPersiapan === 'draft' || !submission.statusPersiapan) || (submission.statusPelaksanaan === 'draft' || !submission.statusPelaksanaan) || submission.statusPersiapan === 'revision' || submission.statusPelaksanaan === 'revision') ? 'Lanjutkan Edit' : 'Lihat Pekerjaan'}
                         >
-                          {(submission.status === 'draft' || submission.status === 'revision') ? (
+                          {((submission.statusPersiapan === 'draft' || !submission.statusPersiapan) || (submission.statusPelaksanaan === 'draft' || !submission.statusPelaksanaan) || submission.statusPersiapan === 'revision' || submission.statusPelaksanaan === 'revision') ? (
                             <Edit3 className="w-4 h-4" />
                           ) : (
                             <Eye className="w-4 h-4" />
                           )}
                         </button>
                       </Link>
-                      {submission.status === 'revision' && (
-                        <button className="bg-surface-container-lowest border border-outline-variant text-secondary px-4 py-2 rounded-lg font-label-md text-[13px] hover:bg-surface-container-low transition-colors">
+                      {(submission.statusPersiapan === 'revision' || submission.statusPelaksanaan === 'revision') && (
+                        <button 
+                          onClick={() => setSelectedSubmission(submission)}
+                          className="bg-surface-container-lowest border border-outline-variant text-secondary px-4 py-2 rounded-lg font-label-md text-[13px] hover:bg-surface-container-low transition-colors"
+                        >
                           Lihat Catatan
                         </button>
                       )}
@@ -428,13 +454,22 @@ export default function RespondentDashboard() {
 
           {selectedSubmission && (
             <div className="space-y-4 py-4">
-              <div className="mb-2">
-                <SubmissionStepper status={selectedSubmission.status} />
+              <div className="mb-2 space-y-6">
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Fase Persiapan</h4>
+                  <SubmissionStepper status={selectedSubmission.statusPersiapan || 'draft'} />
+                </div>
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold mb-2">Fase Pelaksanaan</h4>
+                  <SubmissionStepper status={selectedSubmission.statusPelaksanaan || 'draft'} />
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status Pengecekan</span>
-                <StatusBadge status={selectedSubmission.status} />
-              </div>
+              {selectedSubmission.adminFeedback && (
+                <div className="bg-error-container/20 text-error p-4 rounded-lg text-sm border border-error-container mt-4">
+                  <span className="font-semibold block mb-1">Catatan Revisi dari Admin:</span>
+                  {selectedSubmission.adminFeedback}
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-3">Data yang Diisi</h4>
@@ -450,7 +485,7 @@ export default function RespondentDashboard() {
                 </div>
               </div>
 
-              {selectedSubmission.status === 'approved' && (
+              {((selectedSubmission.status === 'approved') || (selectedSubmission.statusPersiapan === 'approved') || (selectedSubmission.statusPelaksanaan === 'approved')) && (
                 <div className="pt-4 border-t">
                   <Button
                     className="w-full gap-2"
@@ -467,6 +502,27 @@ export default function RespondentDashboard() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmSubmission} onOpenChange={(open) => !open && setDeleteConfirmSubmission(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus pekerjaan <strong>{deleteConfirmSubmission?.data.nama_pekerjaan || 'Tanpa Judul'}</strong>? 
+              Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setDeleteConfirmSubmission(null)} disabled={isDeleting}>
+              Batal
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDeleteDraft} disabled={isDeleting}>
+              {isDeleting ? 'Menghapus...' : 'Ya, Hapus Pekerjaan'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
