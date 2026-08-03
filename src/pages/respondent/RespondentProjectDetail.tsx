@@ -25,6 +25,7 @@ export default function RespondentProjectDetail() {
   const [companyProfile, setCompanyProfile] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
+  const [localSuggestions, setLocalSuggestions] = useState<Record<string, string[]>>({});
 
   const project = useMemo(() => submissions.find(s => s.id === id), [submissions, id]);
 
@@ -34,6 +35,42 @@ export default function RespondentProjectDetail() {
       setCompanyProfile(project.companyProfile || null);
     }
   }, [project?.id]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('pusdaop_field_suggestions') || '{}');
+      setLocalSuggestions(stored);
+    } catch (e) {
+      console.error('Failed to parse local suggestions', e);
+    }
+  }, []);
+
+  const saveSuggestions = (data: Record<string, string>) => {
+    try {
+      const suggestions = JSON.parse(localStorage.getItem('pusdaop_field_suggestions') || '{}');
+      let hasChanges = false;
+      
+      Object.keys(data).forEach(key => {
+        const val = typeof data[key] === 'string' ? data[key].trim() : '';
+        if (val && val.length > 2) {
+          if (!suggestions[key]) suggestions[key] = [];
+          if (!suggestions[key].includes(val)) {
+            suggestions[key].push(val);
+            // keep up to 10 latest unique values
+            if (suggestions[key].length > 10) suggestions[key].shift();
+            hasChanges = true;
+          }
+        }
+      });
+
+      if (hasChanges) {
+        localStorage.setItem('pusdaop_field_suggestions', JSON.stringify(suggestions));
+        setLocalSuggestions(suggestions);
+      }
+    } catch (e) {
+      console.error('Failed to save local suggestions', e);
+    }
+  };
 
   // Filter fields based on category and visibility
   const activeFields = useMemo(() => {
@@ -120,10 +157,12 @@ export default function RespondentProjectDetail() {
   const handleSave = async (phase: 'persiapan' | 'pelaksanaan') => {
     setIsSubmitting(true);
     try {
+      const mergedData = { ...project.data, ...formData };
       await updateSubmission(project.id, {
-        data: { ...project.data, ...formData },
+        data: mergedData,
         companyProfile: companyProfile || undefined,
       });
+      saveSuggestions(mergedData);
       toast.success('Data berhasil disimpan secara lokal');
     } catch (e) {
       toast.error('Gagal menyimpan data');
@@ -166,6 +205,7 @@ export default function RespondentProjectDetail() {
         data: newData,
         companyProfile: companyProfile || undefined,
       });
+      saveSuggestions(newData);
 
       toast.success(`Dokumen ${phase} berhasil diajukan ke Admin`);
     } catch (e) {
@@ -211,7 +251,16 @@ export default function RespondentProjectDetail() {
         </Label>
         
         {field.type === 'text' && (
-          <Input id={field.name} placeholder={field.placeholder} value={formData[field.name] || ''} onChange={(e) => handleInputChange(field.name, e.target.value)} disabled={disabled} />
+          <>
+            <Input id={field.name} list={`suggestions-${field.name}`} placeholder={field.placeholder} value={formData[field.name] || ''} onChange={(e) => handleInputChange(field.name, e.target.value)} disabled={disabled} autoComplete="off" />
+            {localSuggestions[field.name] && localSuggestions[field.name].length > 0 && (
+              <datalist id={`suggestions-${field.name}`}>
+                {localSuggestions[field.name].map((sug, idx) => (
+                  <option key={idx} value={sug} />
+                ))}
+              </datalist>
+            )}
+          </>
         )}
         {field.type === 'number' && (
           <Input id={field.name} type="number" placeholder={field.placeholder} value={formData[field.name] || ''} onChange={(e) => handleInputChange(field.name, e.target.value)} disabled={disabled} />
