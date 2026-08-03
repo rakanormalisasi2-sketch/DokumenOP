@@ -124,7 +124,20 @@ export default function AdminSubmissions() {
         s.data.nama_pekerjaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.data.nomor_kontrak?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+      let matchesStatus = false;
+      if (statusFilter === 'all') {
+        matchesStatus = true;
+      } else if (statusFilter === 'submitted') {
+        matchesStatus = s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted';
+      } else if (statusFilter === 'approved') {
+        matchesStatus = s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved';
+      } else if (statusFilter === 'revision') {
+        matchesStatus = s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision';
+      } else if (statusFilter === 'review') {
+        matchesStatus = s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review';
+      } else {
+        matchesStatus = s.statusPersiapan === statusFilter || s.statusPelaksanaan === statusFilter;
+      }
 
       return matchesSearch && matchesStatus;
     });

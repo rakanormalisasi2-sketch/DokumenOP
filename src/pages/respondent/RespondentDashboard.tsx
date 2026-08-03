@@ -161,7 +161,7 @@ export default function RespondentDashboard() {
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     return mySubmissions
       .filter((s) => new Date(s.createdAt) >= oneYearAgo)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [mySubmissions]);
 
 

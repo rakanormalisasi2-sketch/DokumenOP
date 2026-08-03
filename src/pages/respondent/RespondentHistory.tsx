@@ -70,9 +70,13 @@ export default function RespondentHistory() {
     // 1. Status Filter
     if (statusFilter !== 'all') {
       if (statusFilter === 'pending') {
-        result = result.filter(s => s.status === 'submitted' || s.status === 'review');
+        result = result.filter(s => s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted' || s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review');
+      } else if (statusFilter === 'approved') {
+        result = result.filter(s => s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved');
+      } else if (statusFilter === 'revision') {
+        result = result.filter(s => s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision');
       } else {
-        result = result.filter(s => s.status === statusFilter);
+        result = result.filter(s => s.statusPersiapan === statusFilter || s.statusPelaksanaan === statusFilter);
       }
     }
 

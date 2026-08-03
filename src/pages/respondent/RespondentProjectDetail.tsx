@@ -203,6 +203,7 @@ export default function RespondentProjectDetail() {
       
       await updateSubmission(project.id, {
         data: newData,
+        status: 'submitted',
         companyProfile: companyProfile || undefined,
       });
       saveSuggestions(newData);
@@ -233,6 +234,7 @@ export default function RespondentProjectDetail() {
       
       await updateSubmission(project.id, {
         data: newData,
+        status: 'review',
       });
 
       toast.success('Permintaan perubahan berhasil dikirim ke Admin. Menunggu persetujuan.');
