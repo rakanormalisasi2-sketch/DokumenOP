@@ -23,9 +23,9 @@ export default function AdminDashboard() {
 
   const stats = useMemo(() => ({
     total: submissions.length,
-    pending: submissions.filter((s) => s.status === 'submitted' || s.status === 'review').length,
-    approved: submissions.filter((s) => s.status === 'approved').length,
-    revision: submissions.filter((s) => s.status === 'revision' || s.status === 'rejected').length,
+    pending: submissions.filter((s) => s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted' || s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review').length,
+    approved: submissions.filter((s) => s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved').length,
+    revision: submissions.filter((s) => s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision').length,
   }), [submissions]);
 
   const recentSubmissions = useMemo(() => [...submissions]
@@ -127,8 +127,8 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="bg-surface-container-low text-on-surface font-label-md text-sm border-b border-outline-variant">
                   <th className="py-2 px-4 font-semibold">Pemohon &amp; Pekerjaan</th>
-                  <th className="py-2 px-4 font-semibold">Jenis Dokumen</th>
-                  <th className="py-2 px-4 font-semibold">Status</th>
+                  <th className="py-2 px-4 font-semibold">Persiapan</th>
+                  <th className="py-2 px-4 font-semibold">Pelaksanaan</th>
                   <th className="py-2 px-4 font-semibold text-right">Aksi</th>
                 </tr>
               </thead>
@@ -146,9 +146,11 @@ export default function AdminDashboard() {
                         <div className="font-medium text-on-surface">{submission.data.nama_pekerjaan || 'Tanpa Judul'}</div>
                         <div className="text-[12px]">{submission.respondentName}</div>
                       </td>
-                      <td className="py-3 px-4">{DOCUMENT_TYPE_LABELS[submission.documentType]}</td>
                       <td className="py-3 px-4">
-                        <StatusBadge status={submission.status} />
+                        <StatusBadge status={submission.statusPersiapan || 'draft'} />
+                      </td>
+                      <td className="py-3 px-4">
+                        <StatusBadge status={submission.statusPelaksanaan || 'draft'} />
                       </td>
                       <td className="py-3 px-4 text-right">
                         <Link to={`/admin/submissions?id=${submission.id}`}>
