@@ -19,7 +19,11 @@ import { id } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const { submissions } = useData();
+  const { submissions, accessRequests } = useData();
+
+  const pendingAccessRequests = useMemo(() => 
+    accessRequests.filter(r => r.status === 'pending'), 
+  [accessRequests]);
 
   const stats = useMemo(() => ({
     total: submissions.length,
@@ -174,36 +178,34 @@ export default function AdminDashboard() {
                 <Key className="w-5 h-5 text-secondary" />
                 Permintaan Akses Baru
               </h3>
-              <span className="bg-error text-on-error font-code-sm text-[12px] px-2 py-0.5 rounded-full">2</span>
+              {pendingAccessRequests.length > 0 && (
+                <span className="bg-error text-on-error font-code-sm text-[12px] px-2 py-0.5 rounded-full">{pendingAccessRequests.length}</span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
-              <div className="p-3 bg-surface-bright border border-outline-variant rounded-lg flex items-start gap-3 hover:border-secondary transition-colors cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
-                  <User className="text-on-surface-variant w-4 h-4" />
+              {pendingAccessRequests.length === 0 ? (
+                <div className="text-sm text-on-surface-variant p-4 text-center border border-dashed border-outline-variant rounded-lg">
+                  Tidak ada permintaan akses.
                 </div>
-                <div className="flex-1">
-                  <div className="font-label-md text-sm font-semibold text-on-surface">Budi (Dinas PU)</div>
-                  <div className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">Meminta akses modul Responden.</div>
-                </div>
-                <button className="text-secondary hover:bg-secondary-container/20 p-1 rounded transition-colors">
-                  <Check className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="p-3 bg-surface-bright border border-outline-variant rounded-lg flex items-start gap-3 hover:border-secondary transition-colors cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
-                  <User className="text-on-surface-variant w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-label-md text-sm font-semibold text-on-surface">Admin PT. Cipta</div>
-                  <div className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">Pendaftaran entitas perusahaan.</div>
-                </div>
-                <button className="text-secondary hover:bg-secondary-container/20 p-1 rounded transition-colors">
-                  <Check className="w-4 h-4" />
-                </button>
-              </div>
+              ) : (
+                pendingAccessRequests.slice(0, 3).map(request => (
+                  <div key={request.id} className="p-3 bg-surface-bright border border-outline-variant rounded-lg flex items-start gap-3 hover:border-secondary transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0">
+                      <User className="text-on-surface-variant w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-label-md text-sm font-semibold text-on-surface truncate">{request.name}</div>
+                      <div className="font-body-sm text-[12px] text-on-surface-variant mt-0.5 truncate">{request.email}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <button className="w-full mt-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-sm hover:bg-surface-container transition-colors">Kelola Akses Pengguna</button>
+            <Link to="/admin/users" className="block w-full mt-4">
+              <button className="w-full py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-sm hover:bg-surface-container transition-colors">
+                Kelola Akses Pengguna
+              </button>
+            </Link>
           </div>
 
           {/* System Status Card */}
