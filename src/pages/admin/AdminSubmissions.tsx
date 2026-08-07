@@ -120,9 +120,9 @@ export default function AdminSubmissions() {
   const filteredSubmissions = useMemo(() => {
     return submissions.filter((s) => {
       const matchesSearch =
-        s.respondentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.data.nama_pekerjaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.data.nomor_kontrak?.toLowerCase().includes(searchQuery.toLowerCase());
+        (s.respondentName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (s.data.nama_pekerjaan?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (s.data.nomor_kontrak?.toLowerCase() || '').includes(searchQuery.toLowerCase());
 
       let matchesStatus = false;
       if (statusFilter === 'all') {
