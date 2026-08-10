@@ -83,12 +83,13 @@ export default function AdminTemplates() {
     phase: 'persiapan',
     category: 'kak',
     format: 'docx',
+    targetWorkCategory: 'semua',
   });
 
   const { removeTemplate, addTemplate, updateTemplateMeta } = useData();
 
   const handleOpenAddMeta = () => {
-    setTemplateForm({ name: '', type: '', phase: 'persiapan', category: 'kak', format: 'docx' });
+    setTemplateForm({ name: '', type: '', phase: 'persiapan', category: 'kak', format: 'docx', targetWorkCategory: 'semua' });
     setIsEditingMeta(false);
     setShowMetaDialog(true);
   };
@@ -101,6 +102,7 @@ export default function AdminTemplates() {
       phase: template.phase,
       category: template.category || 'kak',
       format: template.format,
+      targetWorkCategory: template.targetWorkCategory || 'semua',
     });
     setIsEditingMeta(true);
     setShowMetaDialog(true);
@@ -694,6 +696,20 @@ export default function AdminTemplates() {
                     <SelectItem value="notadinas">Nota Dinas</SelectItem>
                     <SelectItem value="pelaksanaan">Pelaksanaan</SelectItem>
                     <SelectItem value="pencairan">Pencairan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Kategori Pekerjaan</Label>
+                <Select
+                  value={templateForm.targetWorkCategory || 'semua'}
+                  onValueChange={(val: any) => setTemplateForm(prev => ({ ...prev, targetWorkCategory: val }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semua">Berlaku untuk Semua</SelectItem>
+                    <SelectItem value="fisik">Khusus Fisik</SelectItem>
+                    <SelectItem value="konsultansi">Khusus Konsultansi</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

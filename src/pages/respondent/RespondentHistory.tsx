@@ -409,6 +409,10 @@ export default function RespondentHistory() {
                 if (t.phase === 'pelaksanaan' && printSubmission?.statusPelaksanaan === 'approved') return true;
                 
                 return false;
+              }).filter(t => {
+                // Filter by workCategory (Fisik / Konsultansi / Semua)
+                if (!t.targetWorkCategory || t.targetWorkCategory === 'semua') return true;
+                return t.targetWorkCategory === printSubmission?.workCategory;
               }).map((template) => {
                 const isSpreadsheet = template.format === 'xlsx';
                 return (

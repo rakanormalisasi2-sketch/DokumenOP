@@ -78,16 +78,16 @@ const initialFields: FormField[] = [
 ];
 
 const defaultTemplates: DocumentTemplate[] = [
-  { id: '1', name: 'Template KAK Perencanaan', type: 'kak_perencanaan', phase: 'persiapan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '2', name: 'Template KAK Konsultansi', type: 'kak_konsultansi', phase: 'persiapan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: 'nd_1', name: 'Template Nota Dinas', type: 'nota_dinas', phase: 'persiapan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '3', name: 'Template Surat Perintah (Fisik)', type: 'surat_perintah_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '4', name: 'Template Surat Perintah (Konsultansi)', type: 'surat_perintah_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '5', name: 'Template BAPHP (Fisik)', type: 'baphp_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '6', name: 'Template BAPHP (Konsultansi)', type: 'baphp_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '7', name: 'Template BAST (Fisik)', type: 'bast_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '8', name: 'Template BAST (Konsultansi)', type: 'bast_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'docx', lastUpdated: new Date() },
-  { id: '9', name: 'Template Lampiran BAPHP', type: 'lampiran_baphp', category: 'pelaksanaan', phase: 'pelaksanaan', content: '', format: 'xlsx', lastUpdated: new Date() },
+  { id: '1', name: 'Template KAK Perencanaan', type: 'kak_perencanaan', phase: 'persiapan', targetWorkCategory: 'fisik', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '2', name: 'Template KAK Konsultansi', type: 'kak_konsultansi', phase: 'persiapan', targetWorkCategory: 'konsultansi', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: 'nd_1', name: 'Template Nota Dinas', type: 'nota_dinas', phase: 'persiapan', targetWorkCategory: 'semua', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '3', name: 'Template Surat Perintah (Fisik)', type: 'surat_perintah_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'fisik', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '4', name: 'Template Surat Perintah (Konsultansi)', type: 'surat_perintah_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'konsultansi', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '5', name: 'Template BAPHP (Fisik)', type: 'baphp_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'fisik', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '6', name: 'Template BAPHP (Konsultansi)', type: 'baphp_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'konsultansi', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '7', name: 'Template BAST (Fisik)', type: 'bast_fisik', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'fisik', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '8', name: 'Template BAST (Konsultansi)', type: 'bast_konsultansi', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'konsultansi', content: '', format: 'docx', lastUpdated: new Date() },
+  { id: '9', name: 'Template Lampiran BAPHP', type: 'lampiran_baphp', category: 'pelaksanaan', phase: 'pelaksanaan', targetWorkCategory: 'semua', content: '', format: 'xlsx', lastUpdated: new Date() },
   ...CONTRACT_FORMATS.flatMap(category =>
     category.items.flatMap(item =>
       item.types.map(type => ({

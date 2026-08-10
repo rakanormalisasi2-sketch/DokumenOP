@@ -175,6 +175,7 @@ export interface DocumentTemplate {
   type: DocumentType | AdendumType | string; // Configurable string for 27 types
   category?: WorkCategory | 'kak' | 'kontrak' | 'notadinas' | 'pelaksanaan' | 'pencairan';
   phase: 'persiapan' | 'pelaksanaan'; // New grouping
+  targetWorkCategory?: 'fisik' | 'konsultansi' | 'semua';
   content: string;
   format: 'docx' | 'xlsx';
   lastUpdated: Date;
