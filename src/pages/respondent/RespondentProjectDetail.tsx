@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { FormField } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const FIELDS_PER_PAGE = 7;
+const FIELDS_PER_PAGE = 15;
 
 export default function RespondentProjectDetail() {
   const { id } = useParams();
