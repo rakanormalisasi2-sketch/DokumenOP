@@ -86,8 +86,9 @@ export default function RespondentSubmit() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validate required fields
-    const missingFields = fields
+    // Validate required fields (only respondent-fillable fields)
+    const respondentFields = fields.filter(f => f.filledBy !== 'admin' && f.visibleTo !== 'admin');
+    const missingFields = respondentFields
       .filter((f) => {
         if (!f.required) return false;
         if (f.type === 'terbilang' || f.type === 'date_addition') return false;
@@ -158,7 +159,7 @@ export default function RespondentSubmit() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {fields.map((field) => (
+              {fields.filter(f => f.filledBy !== 'admin' && f.visibleTo !== 'admin').map((field) => (
                 <div key={field.id} className="space-y-2">
                   <Label htmlFor={field.name}>
                     {field.label}

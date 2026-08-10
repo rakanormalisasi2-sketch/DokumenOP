@@ -82,6 +82,7 @@ export default function RespondentProjectDetail() {
     if (!project) return [];
     return fields.filter(f => {
       if (f.visibleTo === 'admin') return false; // hide admin exclusive fields
+      if (f.filledBy === 'admin') return false; // hide fields that should only be filled by admin
       
       const isKonsul = project.workCategory === 'konsultansi';
       const isFisik = project.workCategory === 'fisik';
