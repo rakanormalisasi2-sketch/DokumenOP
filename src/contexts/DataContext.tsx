@@ -44,14 +44,37 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Legacy Defaults
 const initialFields: FormField[] = [
-  { id: '1', name: 'nama_pekerjaan', label: 'Nama Pekerjaan', type: 'text', required: true, order: 1, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
-  { id: '2', name: 'nama_pelaksana', label: 'Nama Pelaksana (CV/PT)', type: 'text', required: true, order: 2, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
-  { id: '3', name: 'nomor_kontrak', label: 'Nomor Kontrak', type: 'text', required: true, order: 3, visibleTo: 'both', filledBy: 'admin', phase: 'persiapan', showIn: [], showInAdmin: ['kak', 'kontrak'] },
-  { id: '4', name: 'nilai_kontrak', label: 'Nilai Kontrak (Rp)', type: 'number', required: true, order: 4, visibleTo: 'both', filledBy: 'admin', phase: 'persiapan', showIn: [], showInAdmin: ['kontrak'] },
-  { id: '5', name: 'tanggal_mulai', label: 'Tanggal Mulai', type: 'date', required: true, order: 5, visibleTo: 'both', filledBy: 'admin', phase: 'persiapan', showIn: [], showInAdmin: ['kontrak'] },
-  { id: '6', name: 'tanggal_selesai', label: 'Tanggal Selesai', type: 'date', required: true, order: 6, visibleTo: 'both', filledBy: 'admin', phase: 'persiapan', showIn: [], showInAdmin: ['kontrak'] },
-  { id: '7', name: 'lokasi_pekerjaan', label: 'Lokasi Pekerjaan', type: 'text', required: true, order: 7, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
-  { id: '8', name: 'deskripsi', label: 'Deskripsi Pekerjaan', type: 'textarea', required: false, order: 8, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '1', name: 'nama_pekerjaan', label: 'nama pekerjaan', type: 'text', required: true, order: 1, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '2', name: 'nama_perusahaan', label: 'nama perusahaan', type: 'text', required: true, order: 2, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '3', name: 'nama_pejabat_perusahaan', label: 'nama pejabat perusahaan', type: 'text', required: true, order: 3, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '4', name: 'jabatan_penanggung_jawab', label: 'jabatan penanggung jawab', type: 'text', required: true, order: 4, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '5', name: 'no_spk', label: 'No SPK(Kontrak)', type: 'text', required: true, order: 5, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '6', name: 'tanggal_spk', label: 'Tanggal SPK', type: 'date', required: true, order: 6, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '7', name: 'no_adendum_1', label: 'No Adendum 1', type: 'text', required: false, order: 7, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '8', name: 'tanggal_adendum_1', label: 'Tanggal Adendum 1', type: 'date', required: false, order: 8, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '9', name: 'no_adendum_2', label: 'No Adendum 2', type: 'text', required: false, order: 9, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '10', name: 'tanggal_adendum_2', label: 'Tanggal Adendum 2', type: 'date', required: false, order: 10, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '11', name: 'nilai_kontrak', label: 'Nilai Kontrak', type: 'number', required: true, order: 11, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '12', name: 'no_spmk', label: 'NO SPMK', type: 'text', required: true, order: 12, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '13', name: 'tanggal_spmk', label: 'Tanggal SPMK', type: 'date', required: true, order: 13, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '14', name: 'alamat_perusahaan', label: 'Alamat Perusahaan', type: 'textarea', required: true, order: 14, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '15', name: 'masa_pelaksanaan', label: 'Masa Pelaksanaan (hari)', type: 'number', required: true, order: 15, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '16', name: 'tanggal_selesai', label: 'Tanggal Selesai', type: 'date', required: true, order: 16, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '17', name: 'pelaksanaan_penyebutan', label: 'Pelaksanaan (penyebutan)', type: 'text', required: true, order: 17, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '18', name: 'no_surat_permohonan_pemeriksaan', label: 'No Surat Permohonan Pemeriksaan penyedia', type: 'text', required: true, order: 18, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '19', name: 'tanggal_surat_permohonan', label: 'Tanggal surat permohonan pemeriksaan pekerjaan', type: 'date', required: true, order: 19, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '20', name: 'no_surat_perintah_pemeriksaan', label: 'No Surat Perintah Pemeriksaan Pekerjaan (PPK)', type: 'text', required: true, order: 20, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '21', name: 'tanggal_surat_perintah', label: 'Tanggal Surat Perintah Pemeriksaan Pekerjaan (PPK)', type: 'date', required: true, order: 21, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '22', name: 'nama_perusahaan_konsultan', label: 'Nama Perusahaan Konsultan', type: 'text', required: true, order: 22, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '23', name: 'nama_pejabat_konsultan', label: 'nama pejabat perusahaan konsultan', type: 'text', required: true, order: 23, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '24', name: 'jabatan_pejabat_konsultan', label: 'jabatan pejabatan perusahaan konsultan', type: 'text', required: true, order: 24, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '25', name: 'alamat_konsultan', label: 'alamat konsultan', type: 'textarea', required: true, order: 25, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '26', name: 'no_surat_baphp', label: 'No surat BAPHP', type: 'text', required: true, order: 26, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '27', name: 'tanggal_baphp', label: 'Tanggal BAPHP', type: 'date', required: true, order: 27, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '28', name: 'ejaan_tanggal_baphp', label: 'Ejaan Tanggal BAPHP', type: 'text', required: false, order: 28, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '29', name: 'no_bast', label: 'NO BAST', type: 'text', required: true, order: 29, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '30', name: 'tanggal_bast', label: 'Tanggal BAST', type: 'date', required: true, order: 30, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] },
+  { id: '31', name: 'ejaan_tanggal_bast', label: 'Ejaan Tanggal BAST', type: 'text', required: false, order: 31, visibleTo: 'both', filledBy: 'respondent', phase: 'pelaksanaan', showIn: ['awal', 'akhir'] }
 ];
 
 const defaultTemplates: DocumentTemplate[] = [
@@ -125,8 +148,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ]);
 
         if (!isMounted) return;
-
-        if (fieldsRes.data && fieldsRes.data.length > 0) {
+        if (fieldsRes.data && fieldsRes.data.length > 8) {
           const parsedFields = fieldsRes.data.map((f: any) => ({
             ...f,
             order: f.item_order,
@@ -140,15 +162,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
           })) as FormField[];
           setFields(parsedFields);
         } else {
-          // Auto-seed Supabase if empty (first run)
+          // If empty or it has the old 8 default fields, we wipe and seed the 31 fields
+          if (fieldsRes.data && fieldsRes.data.length <= 8) {
+             const ids = fieldsRes.data.map((f: any) => f.id);
+             if (ids.length > 0) {
+               await supabase.from('app_fields').delete().in('id', ids);
+             }
+          }
+          // Auto-seed Supabase
           const insertFields = initialFields.map(f => ({
             id: f.id, name: f.name, label: f.label, type: f.type, placeholder: f.placeholder,
-            options: f.options, required: f.required, item_order: f.order,
-            visible_to: f.visibleTo, filled_by: f.filledBy, phase: f.phase,
-            show_in: f.showIn, show_in_admin: f.showInAdmin, linked_field_id: f.linkedFieldId,
-            terbilang_format: f.terbilangFormat, date_addition_days: f.dateAdditionDays
+            options: f.options, required: f.required, item_order: f.order, visible_to: f.visibleTo,
+            filled_by: f.filledBy, phase: f.phase, show_in: f.showIn, show_in_admin: f.showInAdmin,
+            linked_field_id: f.linkedFieldId, terbilang_format: f.terbilangFormat,
+            date_addition_days: f.dateAdditionDays
           }));
           await supabase.from('app_fields').insert(insertFields);
+          setFields(initialFields);
         }
 
         if (templatesRes.data && templatesRes.data.length > 0) {
