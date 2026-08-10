@@ -128,15 +128,15 @@ export default function AdminSubmissions() {
       if (statusFilter === 'all') {
         matchesStatus = true;
       } else if (statusFilter === 'submitted') {
-        matchesStatus = s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted';
+        matchesStatus = s.status === 'submitted' || s.statusPersiapan === 'submitted' || s.statusPelaksanaan === 'submitted';
       } else if (statusFilter === 'approved') {
-        matchesStatus = s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved';
+        matchesStatus = s.status === 'approved' || (s.statusPersiapan === 'approved' && s.statusPelaksanaan === 'approved');
       } else if (statusFilter === 'revision') {
-        matchesStatus = s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision';
+        matchesStatus = s.status === 'revision' || s.statusPersiapan === 'revision' || s.statusPelaksanaan === 'revision';
       } else if (statusFilter === 'review') {
-        matchesStatus = s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review';
+        matchesStatus = s.status === 'review' || s.statusPersiapan === 'review' || s.statusPelaksanaan === 'review';
       } else {
-        matchesStatus = s.statusPersiapan === statusFilter || s.statusPelaksanaan === statusFilter;
+        matchesStatus = s.status === statusFilter || s.statusPersiapan === statusFilter || s.statusPelaksanaan === statusFilter;
       }
 
       return matchesSearch && matchesStatus;

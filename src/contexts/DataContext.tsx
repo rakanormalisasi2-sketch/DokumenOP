@@ -265,6 +265,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       } catch (err) {
         console.error("Supabase initial fetch failed:", err);
+      } finally {
+        fetchInProgress = false;
       }
     };
 
@@ -581,7 +583,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     await supabase.from('submissions').update(updates).eq('id', id);
-  }, []);
+  }, [submissions]);
 
   const updateSubmissionStatus = useCallback(async (
     id: string, 
