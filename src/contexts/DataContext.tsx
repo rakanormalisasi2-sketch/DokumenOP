@@ -184,6 +184,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (templatesRes.data && templatesRes.data.length > 0) {
           const parsedTemplates = templatesRes.data.map((t: any) => ({
             ...t,
+            targetWorkCategory: t.target_work_category || 'semua',
             lastUpdated: new Date(t.last_updated),
             content: '' // content is in R2
           })) as DocumentTemplate[];
@@ -191,6 +192,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } else {
           const insertTemplates = defaultTemplates.map(t => ({
             id: t.id, name: t.name, type: t.type, category: t.category, phase: t.phase,
+            target_work_category: t.targetWorkCategory || 'semua',
             format: t.format, last_updated: t.lastUpdated.toISOString()
           }));
           await supabase.from('document_templates').insert(insertTemplates);
@@ -665,7 +667,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     await supabase.from('document_templates').insert({
       id, name: template.name, type: template.type, category: template.category,
-      phase: template.phase, format: template.format, last_updated: newTemplate.lastUpdated.toISOString()
+      phase: template.phase, format: template.format, 
+      target_work_category: template.targetWorkCategory || 'semua',
+      last_updated: newTemplate.lastUpdated.toISOString()
     });
   }, []);
 
@@ -692,6 +696,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.phase !== undefined) dbUpdates.phase = updates.phase;
     if (updates.format !== undefined) dbUpdates.format = updates.format;
+    if (updates.targetWorkCategory !== undefined) dbUpdates.target_work_category = updates.targetWorkCategory;
 
     await supabase.from('document_templates').update(dbUpdates).eq('id', id);
   }, []);

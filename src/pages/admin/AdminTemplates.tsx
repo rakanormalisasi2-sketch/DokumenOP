@@ -124,6 +124,7 @@ export default function AdminTemplates() {
         phase: templateForm.phase as 'persiapan' | 'pelaksanaan',
         category: templateForm.category as DocumentTemplate['category'],
         format: templateForm.format as 'docx' | 'xlsx',
+        targetWorkCategory: templateForm.targetWorkCategory as 'fisik' | 'konsultansi' | 'semua',
         content: '',
       });
       toast.success('Template berhasil ditambahkan');
