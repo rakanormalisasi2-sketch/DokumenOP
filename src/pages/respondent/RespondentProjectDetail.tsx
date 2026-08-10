@@ -14,6 +14,9 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ArrowLeft, Save, Send, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { FormField } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const FIELDS_PER_PAGE = 7;
 
 export default function RespondentProjectDetail() {
   const { id } = useParams();
@@ -26,6 +29,8 @@ export default function RespondentProjectDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
   const [localSuggestions, setLocalSuggestions] = useState<Record<string, string[]>>({});
+  const [currentPagePersiapan, setCurrentPagePersiapan] = useState(0);
+  const [currentPagePelaksanaan, setCurrentPagePelaksanaan] = useState(0);
 
   const project = useMemo(() => submissions.find(s => s.id === id), [submissions, id]);
 
@@ -347,31 +352,90 @@ export default function RespondentProjectDetail() {
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 
+                {(() => {
+                  const totalPersiapanPages = Math.ceil(persiapanFields.length / FIELDS_PER_PAGE);
+                  const currentPersiapanFields = persiapanFields.slice(
+                    currentPagePersiapan * FIELDS_PER_PAGE,
+                    (currentPagePersiapan + 1) * FIELDS_PER_PAGE
+                  );
 
+                  return (
+                    <>
+                      {totalPersiapanPages > 1 && (
+                        <div className="mb-6">
+                          <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                            <span>Langkah {currentPagePersiapan + 1} dari {totalPersiapanPages}</span>
+                            <span>{Math.round(((currentPagePersiapan + 1) / totalPersiapanPages) * 100)}%</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div 
+                              className="bg-primary h-2 rounded-full transition-all duration-300" 
+                              style={{ width: `${((currentPagePersiapan + 1) / totalPersiapanPages) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {persiapanFields.map(f => renderField(f, isPersiapanLocked))}
-                </div>
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentPagePersiapan}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.2 }}
+                          className="grid grid-cols-1 gap-6"
+                        >
+                          {currentPersiapanFields.map(f => renderField(f, isPersiapanLocked))}
+                        </motion.div>
+                      </AnimatePresence>
 
-                {!isPersiapanLocked ? (
-                  <div className="flex justify-end gap-3 mt-8">
-                    <Button variant="outline" onClick={() => handleSave('persiapan')} disabled={isSubmitting}>
-                      <Save className="w-4 h-4 mr-2" /> Simpan Draft
-                    </Button>
-                    <Button onClick={() => handleSubmitToAdmin('persiapan')} disabled={isSubmitting}>
-                      <Send className="w-4 h-4 mr-2" /> Ajukan Persiapan
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-end gap-2 mt-8 border-t pt-4">
-                    <p className="text-sm text-muted-foreground">Dokumen persiapan telah diajukan/dikunci.</p>
-                    {statusPersiapan === 'approved' && (
-                      <Button variant="secondary" onClick={() => handleRequestUnlock('persiapan')} disabled={isSubmitting}>
-                        Ajukan Perubahan
-                      </Button>
-                    )}
-                  </div>
-                )}
+                      <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
+                        <div>
+                          {totalPersiapanPages > 1 && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setCurrentPagePersiapan(p => Math.max(0, p - 1))}
+                              disabled={currentPagePersiapan === 0}
+                            >
+                              Sebelumnya
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-3">
+                          {currentPagePersiapan < totalPersiapanPages - 1 ? (
+                            <Button onClick={() => setCurrentPagePersiapan(p => Math.min(totalPersiapanPages - 1, p + 1))}>
+                              Selanjutnya
+                            </Button>
+                          ) : (
+                            <>
+                              {!isPersiapanLocked ? (
+                                <>
+                                  <Button variant="outline" onClick={() => handleSave('persiapan')} disabled={isSubmitting}>
+                                    <Save className="w-4 h-4 mr-2" /> Simpan Draft
+                                  </Button>
+                                  <Button onClick={() => handleSubmitToAdmin('persiapan')} disabled={isSubmitting}>
+                                    <Send className="w-4 h-4 mr-2" /> Ajukan Persiapan
+                                  </Button>
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-end gap-2">
+                                  <p className="text-sm text-muted-foreground">Dokumen persiapan telah diajukan/dikunci.</p>
+                                  {statusPersiapan === 'approved' && (
+                                    <Button variant="secondary" onClick={() => handleRequestUnlock('persiapan')} disabled={isSubmitting}>
+                                      Ajukan Perubahan
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+
               </CardContent>
             </Card>
           </TabsContent>
@@ -391,29 +455,89 @@ export default function RespondentProjectDetail() {
                   <span>Data yang sudah Anda isi pada Dokumen Persiapan akan otomatis terisi di sini jika ada field yang terhubung.</span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {pelaksanaanFields.map(f => renderField(f, isPelaksanaanLocked))}
-                </div>
+                {(() => {
+                  const totalPelaksanaanPages = Math.ceil(pelaksanaanFields.length / FIELDS_PER_PAGE);
+                  const currentPelaksanaanFields = pelaksanaanFields.slice(
+                    currentPagePelaksanaan * FIELDS_PER_PAGE,
+                    (currentPagePelaksanaan + 1) * FIELDS_PER_PAGE
+                  );
 
-                {!isPelaksanaanLocked ? (
-                  <div className="flex justify-end gap-3 mt-8">
-                    <Button variant="outline" onClick={() => handleSave('pelaksanaan')} disabled={isSubmitting}>
-                      <Save className="w-4 h-4 mr-2" /> Simpan Draft
-                    </Button>
-                    <Button onClick={() => handleSubmitToAdmin('pelaksanaan')} disabled={isSubmitting}>
-                      <Send className="w-4 h-4 mr-2" /> Ajukan Pelaksanaan
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-end gap-2 mt-8 border-t pt-4">
-                    <p className="text-sm text-muted-foreground">Dokumen pelaksanaan telah diajukan/dikunci.</p>
-                    {statusPelaksanaan === 'approved' && (
-                      <Button variant="secondary" onClick={() => handleRequestUnlock('pelaksanaan')} disabled={isSubmitting}>
-                        Ajukan Perubahan
-                      </Button>
-                    )}
-                  </div>
-                )}
+                  return (
+                    <>
+                      {totalPelaksanaanPages > 1 && (
+                        <div className="mb-6">
+                          <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                            <span>Langkah {currentPagePelaksanaan + 1} dari {totalPelaksanaanPages}</span>
+                            <span>{Math.round(((currentPagePelaksanaan + 1) / totalPelaksanaanPages) * 100)}%</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div 
+                              className="bg-primary h-2 rounded-full transition-all duration-300" 
+                              style={{ width: `${((currentPagePelaksanaan + 1) / totalPelaksanaanPages) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentPagePelaksanaan}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.2 }}
+                          className="grid grid-cols-1 gap-6"
+                        >
+                          {currentPelaksanaanFields.map(f => renderField(f, isPelaksanaanLocked))}
+                        </motion.div>
+                      </AnimatePresence>
+
+                      <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
+                        <div>
+                          {totalPelaksanaanPages > 1 && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setCurrentPagePelaksanaan(p => Math.max(0, p - 1))}
+                              disabled={currentPagePelaksanaan === 0}
+                            >
+                              Sebelumnya
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-3">
+                          {currentPagePelaksanaan < totalPelaksanaanPages - 1 ? (
+                            <Button onClick={() => setCurrentPagePelaksanaan(p => Math.min(totalPelaksanaanPages - 1, p + 1))}>
+                              Selanjutnya
+                            </Button>
+                          ) : (
+                            <>
+                              {!isPelaksanaanLocked ? (
+                                <>
+                                  <Button variant="outline" onClick={() => handleSave('pelaksanaan')} disabled={isSubmitting}>
+                                    <Save className="w-4 h-4 mr-2" /> Simpan Draft
+                                  </Button>
+                                  <Button onClick={() => handleSubmitToAdmin('pelaksanaan')} disabled={isSubmitting}>
+                                    <Send className="w-4 h-4 mr-2" /> Ajukan Pelaksanaan
+                                  </Button>
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-end gap-2">
+                                  <p className="text-sm text-muted-foreground">Dokumen pelaksanaan telah diajukan/dikunci.</p>
+                                  {statusPelaksanaan === 'approved' && (
+                                    <Button variant="secondary" onClick={() => handleRequestUnlock('pelaksanaan')} disabled={isSubmitting}>
+                                      Ajukan Perubahan
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
