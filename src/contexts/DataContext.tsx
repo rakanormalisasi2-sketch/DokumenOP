@@ -148,7 +148,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ]);
 
         if (!isMounted) return;
-        if (fieldsRes.data && fieldsRes.data.length > 8) {
+        if (fieldsRes.data && fieldsRes.data.length > 0) {
           const parsedFields = fieldsRes.data.map((f: any) => ({
             ...f,
             order: f.item_order,
@@ -161,15 +161,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             dateAdditionDays: f.date_addition_days
           })) as FormField[];
           setFields(parsedFields);
-        } else {
-          // If empty or it has the old 8 default fields, we wipe and seed the 31 fields
-          if (fieldsRes.data && fieldsRes.data.length <= 8) {
-             const ids = fieldsRes.data.map((f: any) => f.id);
-             if (ids.length > 0) {
-               await supabase.from('app_fields').delete().in('id', ids);
-             }
-          }
-          // Auto-seed Supabase
+        } else if (fieldsRes.data && fieldsRes.data.length === 0) {
+          // ONLY seed if the table is completely empty — NEVER delete existing data
+          console.log('[DataContext] app_fields is empty, seeding default 31 fields...');
           const insertFields = initialFields.map(f => ({
             id: f.id, name: f.name, label: f.label, type: f.type, placeholder: f.placeholder,
             options: f.options, required: f.required, item_order: f.order, visible_to: f.visibleTo,
@@ -177,8 +171,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
             linked_field_id: f.linkedFieldId, terbilang_format: f.terbilangFormat,
             date_addition_days: f.dateAdditionDays
           }));
-          await supabase.from('app_fields').insert(insertFields);
+          const { error: insertErr } = await supabase.from('app_fields').insert(insertFields);
+          if (insertErr) {
+            console.error('[DataContext] Failed to seed fields:', insertErr);
+          }
           setFields(initialFields);
+        } else if (fieldsRes.error) {
+          console.error('[DataContext] Failed to fetch fields:', fieldsRes.error);
+          // Keep localStorage cache as fallback
         }
 
         if (templatesRes.data && templatesRes.data.length > 0) {
@@ -523,7 +523,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
     setSubmissions((prev) => [...prev, newSubmission]);
 
-    await supabase.from('submissions').insert({
+    const { error: insertError } = await supabase.from('submissions').insert({
       id, respondent_id: submission.respondentId, respondent_name: submission.respondentName,
       submission_phase: submission.submissionPhase, status: submission.status,
       data: dataWithStatuses, document_type: submission.documentType, work_category: submission.workCategory,
@@ -531,6 +531,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       company_profile: submission.companyProfile, contract_file: submission.contractFile,
       created_at: newSubmission.createdAt.toISOString(), updated_at: newSubmission.updatedAt.toISOString()
     });
+
+    if (insertError) {
+      console.error('[DataContext] addSubmission FAILED:', insertError);
+      toast.error(`Gagal menyimpan ke database: ${insertError.message}. Periksa koneksi atau hubungi admin.`);
+    } else {
+      console.log('[DataContext] addSubmission SUCCESS, id:', id);
+    }
 
     return id;
   }, []);
@@ -582,7 +589,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    await supabase.from('submissions').update(updates).eq('id', id);
+    const { error: updateError } = await supabase.from('submissions').update(updates).eq('id', id);
+    if (updateError) {
+      console.error('[DataContext] updateSubmission FAILED:', updateError);
+      toast.error(`Gagal memperbarui data: ${updateError.message}. Data mungkin hanya tersimpan lokal.`);
+    } else {
+      console.log('[DataContext] updateSubmission SUCCESS, id:', id);
+    }
   }, [submissions]);
 
   const updateSubmissionStatus = useCallback(async (
@@ -725,9 +738,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const id = crypto.randomUUID();
     const newRequest: AccessRequest = { ...request, id, requestDate: new Date(), status: 'pending' };
     setAccessRequests((prev) => [...prev, newRequest]);
-    await supabase.from('access_requests').insert({
+    const { error } = await supabase.from('access_requests').insert({
       id, name: request.name, email: request.email, status: 'pending', request_date: newRequest.requestDate.toISOString()
     });
+    if (error) {
+      console.error('[DataContext] addAccessRequest FAILED:', error);
+      toast.error(`Gagal menyimpan permintaan akses: ${error.message}`);
+    }
   }, []);
 
   const updateAccessRequest = useCallback(async (id: string, data: Partial<AccessRequest>) => {
