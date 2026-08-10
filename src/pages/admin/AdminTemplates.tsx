@@ -480,30 +480,31 @@ export default function AdminTemplates() {
           </TabsContent>
         </Tabs>
 
+        {/* Full-Screen Native OOXML Editor */}
+        {showNativeEditor && selectedTemplate?.format === 'docx' && (
+          <div className="fixed inset-0 z-[100] bg-white flex flex-col w-screen h-screen">
+            <SyncfusionDocumentEditor
+              initialContent={selectedTemplate?.content}
+              fileName={selectedTemplate?.name || 'Dokumen.docx'}
+              onSave={async (base64) => {
+                await updateTemplate(selectedTemplate!.id, base64);
+              }}
+              onClose={() => {
+                setShowNativeEditor(false);
+              }}
+              fields={fields.map(f => ({ name: f.name, label: f.label, phase: f.phase, type: f.type }))}
+            />
+          </div>
+        )}
+
         {/* Edit Dialog - Context Aware */}
-        <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
-          <DialogContent className={`w-full ${(showSmartEditor || showNativeEditor || selectedTemplate?.format === 'xlsx')
+        <Dialog open={!!selectedTemplate && !showNativeEditor} onOpenChange={() => setSelectedTemplate(null)}>
+          <DialogContent className={`w-full ${(showSmartEditor || selectedTemplate?.format === 'xlsx')
             ? 'max-w-[95vw] max-h-[95vh] h-[95vh]'
             : 'max-w-2xl'
             } overflow-hidden flex flex-col p-1`}>
 
-            {showNativeEditor && selectedTemplate?.format === 'docx' ? (
-              // NATIVE OOXML EDITOR
-              <div className='flex-1 h-full'>
-                <SyncfusionDocumentEditor
-                  initialContent={selectedTemplate?.content}
-                  fileName={selectedTemplate?.name || 'Dokumen.docx'}
-                  onSave={async (base64) => {
-                    await updateTemplate(selectedTemplate!.id, base64);
-                    // Toast is already inside SyncfusionDocumentEditor
-                  }}
-                  onClose={() => {
-                    setShowNativeEditor(false);
-                  }}
-                  fields={fields.map(f => ({ name: f.name, label: f.label, phase: f.phase, type: f.type }))}
-                />
-              </div>
-            ) : showSmartEditor && selectedTemplate?.format === 'docx' ? (
+            {showSmartEditor && selectedTemplate?.format === 'docx' ? (
               // SMART EDITOR VIEW
               <SmartDocxEditor
                 initialUrl={selectedTemplate.content}
