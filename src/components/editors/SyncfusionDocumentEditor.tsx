@@ -165,12 +165,20 @@ export default function SyncfusionDocumentEditor({
             await new Promise(resolve => setTimeout(resolve, 200));
 
             const blob = await editor.saveAsBlob('Docx');
+            console.log('[SyncfusionEditor] Got blob, size:', blob.size);
             const reader = new FileReader();
             reader.onloadend = async () => {
-                const base64data = reader.result as string;
-                await onSave(base64data);
-                toast.success('✅ Dokumen berhasil disimpan!');
-                setIsSaving(false);
+                try {
+                    const base64data = reader.result as string;
+                    console.log('[SyncfusionEditor] Base64 length:', base64data?.length);
+                    await onSave(base64data);
+                    toast.success('✅ Dokumen berhasil disimpan!');
+                } catch (saveErr) {
+                    console.error('[SyncfusionEditor] onSave error:', saveErr);
+                    toast.error('Gagal menyimpan ke storage: ' + (saveErr as Error).message);
+                } finally {
+                    setIsSaving(false);
+                }
             };
             reader.onerror = () => {
                 toast.error('Gagal membaca dokumen');
@@ -178,8 +186,8 @@ export default function SyncfusionDocumentEditor({
             };
             reader.readAsDataURL(blob);
         } catch (err) {
-            console.error(err);
-            toast.error('Gagal menyimpan dokumen');
+            console.error('[SyncfusionEditor] handleSave error:', err);
+            toast.error('Gagal menyimpan dokumen: ' + (err as Error).message);
             setIsSaving(false);
         }
     };
