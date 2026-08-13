@@ -45,13 +45,19 @@ export default function DocumentPreview({
 
   useEffect(() => {
     const renderDoc = async () => {
-      if (!isBase64Docx || !containerRef.current || !content) return;
+      if (!isBase64Docx || !containerRef.current || !content) {
+        console.log('[DocumentPreview] Skipping render - isBase64Docx:', isBase64Docx, 'content length:', content?.length);
+        return;
+      }
 
       setIsLoading(true);
       try {
         let blobToRender: Blob | ArrayBuffer;
 
         if (submission) {
+          console.log('[DocumentPreview] Submission data keys:', Object.keys(submission.data || {}));
+          console.log('[DocumentPreview] Submission data sample:', JSON.stringify(submission.data).substring(0, 300));
+
           // Pre-calculate terbilang fields
           const enrichedData = { ...submission.data };
           fields.forEach(f => {
@@ -60,17 +66,22 @@ export default function DocumentPreview({
             }
           });
 
+          console.log('[DocumentPreview] enrichedData keys:', Object.keys(enrichedData));
+          console.log('[DocumentPreview] Template content starts with:', content.substring(0, 80));
+
           // Perform Mail Merge
           const merged = performMailMerge(content.split(',')[1], enrichedData);
+          console.log('[DocumentPreview] Mail merge result:', merged ? `Blob ${merged.size} bytes` : 'NULL (failed)');
           if (merged) {
             blobToRender = merged;
             setMergedBlob(merged);
           } else {
             // Fallback to original if merge fails
             blobToRender = base64ToArrayBuffer(content.split(',')[1]);
-            toast.error("Gagal melakukan Mail Merge, menampilkan template asli.");
+            toast.error('Gagal melakukan Mail Merge, menampilkan template asli.');
           }
         } else {
+          console.log('[DocumentPreview] No submission — rendering raw template');
           // Just render the original template
           blobToRender = base64ToArrayBuffer(content.split(',')[1]);
         }
@@ -89,8 +100,8 @@ export default function DocumentPreview({
           });
         }
       } catch (error) {
-        console.error("Error preventing document:", error);
-        toast.error("Gagal memuat preview dokumen.");
+        console.error('[DocumentPreview] Error rendering document:', error);
+        toast.error('Gagal memuat preview dokumen.');
       } finally {
         setIsLoading(false);
       }
