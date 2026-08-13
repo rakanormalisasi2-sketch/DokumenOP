@@ -17,6 +17,7 @@ export const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
 
 /**
  * Performs a Mail Merge on a DOCX Base64 string using the provided data.
+ * Uses {{fieldName}} double-brace syntax (consistent with HTML/XLSX templates).
  * Returns the merged document as a Blob.
  */
 export const performMailMerge = (
@@ -27,13 +28,15 @@ export const performMailMerge = (
         // 1. Load the DOCX file as a binary
         const zip = new PizZip(base64ToArrayBuffer(docxBase64));
 
-        // 2. Parse the template
+        // 2. Parse the template with {{double brace}} delimiters
         const doc = new Docxtemplater(zip, {
             paragraphLoop: true,
             linebreaks: true,
+            delimiters: { start: '{{', end: '}}' },
+            nullGetter: () => '',
         });
 
-        // 3. Render the document (replace {placeholders} with data)
+        // 3. Render the document (replace {{placeholders}} with data)
         doc.render(data);
 
         // 4. Generate the output as a Blob
@@ -44,9 +47,14 @@ export const performMailMerge = (
         });
 
         return out;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Mail Merge Error:', error);
-        // Return null or throw error depending on how we want to handle it
+        if (error.properties && error.properties.errors instanceof Array) {
+            const errorMessages = error.properties.errors
+                .map((e: any) => e.properties?.explanation || e.message)
+                .join('\n');
+            console.error('Docxtemplater errors:', errorMessages);
+        }
         return null;
     }
 };
@@ -54,16 +62,18 @@ export const performMailMerge = (
 /**
  * Generates a document by injecting data into the original binary using docxtemplater.
  * This preserves 100% of the original layout (headers, footers, signatures).
+ * Uses {{fieldName}} double-brace syntax.
  */
 export const generateDocument = async (originalBlob: Blob, data: Record<string, any>): Promise<Blob> => {
     const arrayBuffer = await originalBlob.arrayBuffer();
     const zip = new PizZip(arrayBuffer);
 
-    // Configure docxtemplater
+    // Configure docxtemplater with {{double brace}} delimiters
     const doc = new Docxtemplater(zip, {
         paragraphLoop: true,
         linebreaks: true,
-        nullGetter: () => ""
+        delimiters: { start: '{{', end: '}}' },
+        nullGetter: () => ''
     });
 
     // Render the document
@@ -73,7 +83,7 @@ export const generateDocument = async (originalBlob: Blob, data: Record<string, 
         console.error("Docxtemplater Error:", error);
         if (error.properties && error.properties.errors instanceof Array) {
             const errorMessages = error.properties.errors.map(
-                (e: any) => e.properties.explanation
+                (e: any) => e.properties?.explanation || e.message
             ).join("\n");
             throw new Error(`Template Error: ${errorMessages}`);
         }
@@ -90,15 +100,15 @@ export const generateDocument = async (originalBlob: Blob, data: Record<string, 
 };
 
 /**
- * Detects variables in the format {{VAR_NAME}} or {VAR_NAME} from a string.
+ * Detects variables in the format {{VAR_NAME}} from a string.
  */
 export const detectVariables = (text: string): string[] => {
-    const regex = /{{([^{}]+)}}|{([^{}]+)}/g;
+    const regex = /{{([^{}]+)}}/g;
     const variables = new Set<string>();
     let match;
 
     while ((match = regex.exec(text)) !== null) {
-        const varName = (match[1] || match[2]).trim();
+        const varName = match[1].trim();
         const cleanName = varName.replace(/^MERGEFIELD\s+/i, '').replace(/^\"|\"$/g, '').trim();
 
         if (cleanName) {

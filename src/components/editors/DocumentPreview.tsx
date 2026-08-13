@@ -185,41 +185,56 @@ export default function DocumentPreview({
     e.stopPropagation();
 
     if (isBase64Docx) {
-      if (mergedBlob) {
-        // Create object URL for the blob and open it
-        const url = URL.createObjectURL(mergedBlob);
-        const printWindow = window.open(url, '_blank');
-        // Check if it's PDF or just open it.
-        // Browser might not print DOCX blob directly.
-        // Best effort: Print the container content?
-        // Actually docx-preview renders HTML. We can print the container!
-
-        // Re-use logic below but target the containerRef
-        const contentHtml = containerRef.current?.innerHTML || '';
-        const printWin = window.open('', '_blank');
-        if (printWin) {
-          printWin.document.write(`
-                    <html>
-                        <head><title>${title}</title></head>
-                        <body>${DOMPurify.sanitize(contentHtml)}</body>
-                    </html>
-                 `);
-          printWin.document.close();
-          setTimeout(() => {
-            printWin.print();
-          }, 500);
-        }
+      // For DOCX: print the docx-preview rendered HTML which preserves all formatting
+      const contentHtml = containerRef.current?.innerHTML || '';
+      if (!contentHtml) {
+        toast.error('Dokumen belum selesai dimuat. Tunggu sebentar lalu coba lagi.');
         return;
       }
+
+      // Grab all docx-preview stylesheets from the page
+      const docxStyles = Array.from(document.styleSheets)
+        .filter(ss => { try { return ss.cssRules !== null; } catch { return false; } })
+        .map(ss => Array.from(ss.cssRules).map(r => r.cssText).join('\n'))
+        .join('\n');
+
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${title}</title>
+              <style>
+                ${docxStyles}
+                body { margin: 0; padding: 0; background: white; }
+                @media print {
+                  body { margin: 0; }
+                  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+              </style>
+            </head>
+            <body>${DOMPurify.sanitize(contentHtml)}</body>
+          </html>
+        `);
+        printWin.document.close();
+        setTimeout(() => {
+          printWin.focus();
+          printWin.print();
+        }, 800);
+      } else {
+        alert('Popup diblokir oleh browser. Silakan izinkan popup untuk mencetak.');
+      }
+      return;
     }
 
+    // For HTML/XLSX templates
     const contentHtml = format === 'xlsx'
       ? document.querySelector('.preview-content')?.innerHTML || ''
       : renderContent();
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      // Print styles - DO NOT override inline cell borders to respect borderless settings
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -228,9 +243,7 @@ export default function DocumentPreview({
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               table { border-collapse: collapse; width: 100%; }
-              /* Only set default padding; borders come from inline styles */
               td, th { padding: 5px 7px; vertical-align: top; }
-              /* Respect inline border styles - no forcing borders */
               img { max-width: 100%; height: auto; }
               @media print {
                 body { margin: 15mm; }
@@ -238,9 +251,7 @@ export default function DocumentPreview({
               }
             </style>
           </head>
-          <body>
-            ${DOMPurify.sanitize(contentHtml)}
-          </body>
+          <body>${DOMPurify.sanitize(contentHtml)}</body>
         </html>
       `);
       printWindow.document.close();
@@ -253,12 +264,12 @@ export default function DocumentPreview({
     }
   };
 
-  const handleDownloadPdf = (e: React.MouseEvent) => {
+  const handleDownloadDocx = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (isBase64Docx && mergedBlob) {
-      // Download the MERGED DOCX
+      // Download the MERGED DOCX (with submission data filled in)
       const url = URL.createObjectURL(mergedBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -267,17 +278,22 @@ export default function DocumentPreview({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("File DOCX berhasil didownload.");
+      toast.success('File DOCX berhasil didownload. Untuk PDF: buka di Word lalu Export → PDF.');
       return;
     }
 
+    if (isBase64Docx && !mergedBlob) {
+      toast.error('Dokumen belum selesai dimuat. Tunggu sebentar lalu coba lagi.');
+      return;
+    }
+
+    // For HTML/XLSX: trigger print-to-PDF via browser
     const contentHtml = format === 'xlsx'
       ? document.querySelector('.preview-content')?.innerHTML || ''
       : renderContent();
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      // PDF styles - DO NOT override inline cell borders to respect borderless settings
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -286,9 +302,7 @@ export default function DocumentPreview({
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; }
               table { border-collapse: collapse; width: 100%; }
-              /* Only set default padding; borders come from inline styles */
               td, th { padding: 5px 7px; vertical-align: top; }
-              /* Respect inline border styles - no forcing borders */
               img { max-width: 100%; height: auto; }
               @media print {
                 body { margin: 15mm; }
@@ -297,9 +311,7 @@ export default function DocumentPreview({
             </style>
           </head>
           <body>
-            <p style="text-align: center; color: #666; font-size: 12px; margin-bottom: 20px;">
-              Gunakan "Save as PDF" atau "Microsoft Print to PDF" pada dialog print
-            </p>
+            <p style="text-align:center;color:#666;font-size:12px;margin-bottom:20px;">Pilih "Save as PDF" pada dialog print untuk menyimpan sebagai PDF</p>
             ${DOMPurify.sanitize(contentHtml)}
           </body>
         </html>
@@ -310,7 +322,7 @@ export default function DocumentPreview({
         printWindow.print();
       }, 500);
     } else {
-      alert('Popup diblokir oleh browser. Silakan izinkan popup untuk download PDF.');
+      alert('Popup diblokir oleh browser. Silakan izinkan popup.');
     }
   };
 
@@ -384,9 +396,9 @@ export default function DocumentPreview({
               <Printer className="w-4 h-4" />
               Cetak
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadPdf} className="gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadDocx} className="gap-2">
               <Download className="w-4 h-4" />
-              Download / PDF
+              Download DOCX
             </Button>
             {onClose && (
               <Button variant="ghost" size="icon" onClick={handleCloseClick}>
