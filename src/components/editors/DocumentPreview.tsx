@@ -279,22 +279,46 @@ export default function DocumentPreview({
     e.preventDefault();
     e.stopPropagation();
 
-    if (isBase64Docx && mergedBlob) {
-      // Download the MERGED DOCX (with submission data filled in)
-      const url = URL.createObjectURL(mergedBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('File DOCX berhasil didownload. Untuk PDF: buka di Word lalu Export → PDF.');
-      return;
-    }
+    if (isBase64Docx) {
+      // Open print dialog for Save as PDF
+      const contentHtml = containerRef.current?.innerHTML || '';
+      if (!contentHtml) {
+        toast.error('Dokumen belum selesai dimuat. Tunggu sebentar lalu coba lagi.');
+        return;
+      }
 
-    if (isBase64Docx && !mergedBlob) {
-      toast.error('Dokumen belum selesai dimuat. Tunggu sebentar lalu coba lagi.');
+      const docxStyles = Array.from(document.styleSheets)
+        .filter(ss => { try { return ss.cssRules !== null; } catch { return false; } })
+        .map(ss => Array.from(ss.cssRules).map(r => r.cssText).join('\n'))
+        .join('\n');
+
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${title}</title>
+              <style>
+                ${docxStyles}
+                body { margin: 0; padding: 0; background: white; }
+                @page { margin: 15mm; }
+                @media print {
+                  body { margin: 0; }
+                  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+              </style>
+            </head>
+            <body>${DOMPurify.sanitize(contentHtml)}</body>
+          </html>
+        `);
+        printWin.document.close();
+        toast.info('Pada dialog print, pilih "Save as PDF" atau "Microsoft Print to PDF"');
+        setTimeout(() => {
+          printWin.focus();
+          printWin.print();
+        }, 800);
+      }
       return;
     }
 
@@ -407,9 +431,9 @@ export default function DocumentPreview({
               <Printer className="w-4 h-4" />
               Cetak
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadDocx} className="gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadDocx} className="gap-2 bg-green-50 border-green-400 text-green-700 hover:bg-green-100">
               <Download className="w-4 h-4" />
-              Download DOCX
+              Simpan PDF
             </Button>
             {onClose && (
               <Button variant="ghost" size="icon" onClick={handleCloseClick}>

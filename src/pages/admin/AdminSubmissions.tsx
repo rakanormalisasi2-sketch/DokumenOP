@@ -297,81 +297,27 @@ export default function AdminSubmissions() {
   const handlePrint = (docTypes: DocumentType[], paperSize: PaperSize, format: 'print' | 'pdf') => {
     if (!selectedSubmission) return;
 
-    // Build print content
-    const printContent = docTypes.map(docType => {
-      return `
-        <div class="page" style="page-break-after: always;">
-          <h2 style="text-align: center;">${DOCUMENT_TYPE_LABELS[docType]}</h2>
-          <hr/>
-          <table style="width: 100%; border-collapse: collapse;">
-            ${fields.map(field => `
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; width: 30%;">${field.label}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${selectedSubmission.data[field.name] || '-'}</td>
-              </tr>
-            `).join('')}
-          </table>
-        </div>
-      `;
-    }).join('');
-
-    // Paper size styles
-    const paperStyles: Record<PaperSize, string> = {
-      'A4': 'width: 210mm; min-height: 297mm;',
-      'F4': 'width: 215mm; min-height: 330mm;',
-      'Letter': 'width: 8.5in; min-height: 11in;',
-      'Legal': 'width: 8.5in; min-height: 14in;',
-    };
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Cetak Dokumen - ${DOMPurify.sanitize(selectedSubmission.data.nama_pekerjaan || '')}</title>
-            <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 20px;
-              }
-              .page {
-                ${paperStyles[paperSize]}
-                margin: 0 auto 20px;
-                padding: 40px;
-                background: white;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-              }
-              table { margin-top: 20px; }
-              @media print {
-                .page { 
-                  box-shadow: none; 
-                  margin: 0;
-                  ${paperStyles[paperSize]}
-                }
-                @page { 
-                  size: ${paperSize}; 
-                  margin: 20mm;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${DOMPurify.sanitize(printContent)}
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-
-      if (format === 'print') {
-        printWindow.print();
-      } else {
-        // For PDF, user can use browser's print to PDF feature
-        toast.info('Gunakan "Save as PDF" pada dialog print untuk menyimpan sebagai PDF');
-        printWindow.print();
-      }
+    // For each docType, open DocumentPreview which handles template-based printing
+    // We open them sequentially — first doc type goes to preview, rest auto-print
+    if (docTypes.length === 1) {
+      // Single doc: open preview dialog so user can print from there
+      setPreviewDocType(docTypes[0]);
+      setShowPreviewDialog(true);
+      setShowPrintDialog(false);
+      return;
     }
+
+    // Multiple docs: open each in a new print window with template content
+    docTypes.forEach((docType, idx) => {
+      const template = templates.find(t => t.type === docType);
+      const templateContent = template?.content || '';
+      const templateFormat = template?.format || 'docx';
+
+      setTimeout(() => {
+        setPreviewDocType(docType);
+        setShowPreviewDialog(true);
+      }, idx * 500);
+    });
 
     setShowPrintDialog(false);
   };
@@ -835,16 +781,11 @@ export default function AdminSubmissions() {
         {/* Preview Dialog */}
         {showPreviewDialog && selectedSubmission && (
           <DocumentPreview
-            content={templates.find(t => t.type === previewDocType)?.content || `<h2 style="text-align: center;">${DOCUMENT_TYPE_LABELS[previewDocType]}</h2>
-              <p style="text-align: center;">${selectedSubmission.data.nama_pekerjaan}</p>
-              <hr/>
-              <table style="width: 100%;">
-                ${fields.map(f => `<tr><td style="width: 30%;">${f.label}</td><td>: ${selectedSubmission.data[f.name] || '-'}</td></tr>`).join('')}
-              </table>`}
-            format="docx"
+            content={templates.find(t => t.type === previewDocType)?.content || ''}
+            format={templates.find(t => t.type === previewDocType)?.format || 'docx'}
             submission={selectedSubmission}
             fields={fields}
-            title={`Preview: ${DOCUMENT_TYPE_LABELS[previewDocType]}`}
+            title={`${DOCUMENT_TYPE_LABELS[previewDocType]} - ${selectedSubmission.data.nama_pekerjaan || ''}`}
             documentType={previewDocType}
             isAdmin={true}
             onClose={() => setShowPreviewDialog(false)}
