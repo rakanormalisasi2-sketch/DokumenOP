@@ -156,6 +156,9 @@ export default function AdminTemplates() {
 
   const handleEdit = async (template: DocumentTemplate) => {
     setSelectedTemplate(template);
+    // Initialize editContent with the template's current content
+    const content = template.content || getDefaultContent(template);
+    setEditContent(content);
     setShowSmartEditor(false);
     setSmartEditorFile(null);
     setShowNativeEditor(false);
@@ -180,9 +183,10 @@ export default function AdminTemplates() {
   const handleSave = async () => {
     if (selectedTemplate && selectedTemplate.format !== 'docx') {
       try {
+        console.log('[AdminTemplates] Saving template:', selectedTemplate.id, 'content length:', editContent?.length);
         await updateTemplate(selectedTemplate.id, editContent);
-        toast.success('Template berhasil disimpan');
-        setSelectedTemplate(null);
+        toast.success('✅ Template berhasil disimpan!');
+        // Don't auto-close so user can verify and continue editing
       } catch (e: any) {
         console.error('Save template failed:', e);
         toast.error(`Gagal menyimpan template: ${e?.message || 'Unknown error'}`);
